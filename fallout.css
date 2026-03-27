@@ -1,0 +1,311 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech+Mono&display=swap");
+
+:root {
+  --fg-pb-green: 26, 255, 128;
+  --fg-pb-blue: 46, 207, 255;
+  --fg-pb-amber: 255, 182, 66;
+  --fg-pb-white: 192, 255, 255;
+
+  --fo-fg: var(--fg-pb-green);
+  --fo-bg: var(--fg-pb-green), 0.25;
+}
+
+.fo-blue {
+  --fo-fg: var(--fg-pb-blue);
+  --fo-bg: var(--fg-pb-blue), 0.25;
+}
+
+.fo-amber {
+  --fo-fg: var(--fg-pb-amber);
+  --fo-bg: var(--fg-pb-amber), 0.25;
+}
+
+.fo-white {
+  --fo-fg: var(--fg-pb-white);
+  --fo-bg: var(--fg-pb-white), 0.25;
+}
+
+.fo-ui {
+  font-family: "Roboto", sans-serif, system-ui;
+}
+
+.fo-terminal {
+  font-family: "Share Tech Mono", monospace, system-ui;
+}
+
+.fo-selection *::selection {
+  background-color: rgb(var(--fo-fg));
+  color: black;
+}
+
+.fg-pb {
+  color: rgb(var(--fo-fg));
+}
+
+.fo-link {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.bg-pb {
+  background-color: rgba(var(--fo-bg));
+}
+
+.fo-glow {
+  text-shadow:
+    0 0 0.25rem rgb(var(--fo-fg)),
+    0 0 1rem rgb(var(--fo-fg));
+}
+
+.fo-shadow {
+  box-shadow:
+    0 0 0.25rem rgba(var(--fo-bg)),
+    0 0 1rem rgba(var(--fo-bg));
+}
+
+@keyframes crtAnimation {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 10000%;
+  }
+}
+
+.bg-terminal {
+  position: relative;
+  box-shadow: inset 0px 0px 2rem;
+  background-image: linear-gradient(0deg, #0000 10%, #fff1 90%, #0000 100%);
+  animation: crtAnimation 100s linear infinite;
+  background-size: 100% 80%;
+}
+
+.bg-terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+.fo-progress {
+  background-color: transparent;
+  border: 2px solid rgb(var(--fo-fg));
+  border-radius: 0;
+  height: 1rem;
+
+  &::-webkit-progress-bar {
+    background-color: transparent;
+  }
+  &::-webkit-progress-value {
+    background-color: rgb(var(--fo-fg));
+    border-radius: 0;
+  }
+  &::-moz-progress-bar {
+    background-color: rgb(var(--fo-fg));
+    border-radius: 0;
+  }
+  &:indeterminate::-moz-progress-bar {
+    background-color: transparent;
+  }
+}
+
+.fo-tabs {
+  display: grid;
+  align-items: flex-start;
+  position: relative;
+  padding: 0 2rem;
+}
+
+.fo-tabs::before {
+  content: "";
+  position: absolute;
+  border-top: 2px solid rgb(var(--fo-fg));
+  border-left: 2px solid rgb(var(--fo-fg));
+  width: 2rem;
+  height: 8px;
+  bottom: -6px;
+  left: 0;
+}
+
+.fo-tabs::after {
+  content: "";
+  position: absolute;
+  border-top: 2px solid rgb(var(--fo-fg));
+  border-right: 2px solid rgb(var(--fo-fg));
+  width: 2rem;
+  height: 8px;
+  bottom: -6px;
+  right: 0;
+}
+
+.fo-tab {
+  position: relative;
+  grid-row-start: 1;
+  display: inline-flex;
+  font-weight: 700;
+  text-transform: uppercase;
+  height: 2rem;
+  font-size: 1.25rem;
+  line-height: 2.25rem;
+  cursor: pointer;
+  user-select: none;
+  appearance: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: rgb(var(--fo-fg));
+  border-color: rgb(var(--fo-fg));
+  border-bottom-width: 2px;
+}
+
+.fo-tab-active {
+  border-bottom-width: 0;
+}
+
+.fo-tab-active::before {
+  content: "";
+  position: absolute;
+  border-top: 2px solid rgb(var(--fo-fg));
+  border-left: 2px solid rgb(var(--fo-fg));
+  width: 8px;
+  height: 60%;
+  bottom: 0;
+  left: 0;
+}
+
+.fo-tab-active::after {
+  content: "";
+  position: absolute;
+  border-top: 2px solid rgb(var(--fo-fg));
+  border-right: 2px solid rgb(var(--fo-fg));
+  width: 8px;
+  height: 60%;
+  bottom: 0;
+  right: 0;
+}
+
+.fo-btn {
+  display: inline-flex;
+  cursor: pointer;
+  text-transform: uppercase;
+  user-select: none;
+  appearance: none;
+  cursor: pointer;
+  font-weight: 700;
+  background-color: rgb(var(--fo-fg));
+  padding: 0.25rem;
+  transition: background-color 0.1s;
+}
+
+.fo-btn:hover {
+  background-color: rgb(var(--fo-fg), 0.75);
+}
+
+.fo-list > li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.fo-list > li:before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background-color: rgb(var(--fo-fg));
+}
+
+.fo-input[type="text"],
+textarea.fo-input {
+  background-color: rgb(var(--fo-bg));
+  color: rgb(var(--fo-fg));
+  padding: 0 0.25rem;
+  outline: none;
+}
+
+.fo-input[type="text"]::placeholder,
+textarea.fo-input::placeholder {
+  color: rgb(var(--fo-fg), 0.625);
+}
+
+.fo-select {
+  background-color: rgb(var(--fo-bg));
+  color: rgb(var(--fo-fg));
+  padding: 0.125rem;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.fo-select optgroup {
+  color: initial;
+}
+
+.fo-input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.fo-input[type="range"]::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: rgb(var(--fo-bg));
+}
+
+.fo-input[type="range"]::-moz-range-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  height: 1.5rem;
+  background: rgb(var(--fo-bg));
+}
+
+.fo-input[type="range"]::-ms-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: rgb(var(--fo-bg));
+}
+
+.fo-input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(
+    to top,
+    rgb(var(--fo-fg)),
+    rgb(var(--fo-bg))
+  );
+  margin: 0.125rem;
+  height: 1.25rem;
+  width: 0.5rem;
+}
+
+.fo-input[type="range"]::-moz-range-thumb {
+  border: none;
+  border-radius: 0;
+  background-image: linear-gradient(
+    to top,
+    rgb(var(--fo-fg)),
+    rgb(var(--fo-bg))
+  );
+  height: 1.25rem;
+  width: 0.5rem;
+}
