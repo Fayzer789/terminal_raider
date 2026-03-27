@@ -1,12 +1,8 @@
 # Hack Project
 
-@Coach sur dicord en, cas de besoin.
-
-preparer phrase qui résume le projet pour dimanche matin.
-
-projet entre dans le triangle tech, éducation, fiction. (logiciel d'éducation numérique pour enfant ?)
-
-référentielle de formation numérique (matière en fonction de l'âge)
+quand le joueur essaie d'accéder à un folder, il disparaît "non...pas là",
+"j'espère que tu n'avais rien d'important dedans",
+"oups, désolé, j'ai fait exprès"
 
 ## Installation
 
