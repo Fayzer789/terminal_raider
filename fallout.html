@@ -655,6 +655,54 @@
         </div>
 
         <script>
+                // ── AUDIO SYSTEM (INJECTÉ) ──────────────────────────────────────────
+                const SP = './sounds/';
+                let audioUnlocked = false;
+
+                const keySounds = Array.from({ length: 10 }, (_, i) => new Audio(`${SP}k${i + 1}.ogg`));
+                const sndEnter = new Audio(`${SP}kenter.ogg`);
+                const sndBad = new Audio(`${SP}passbad.ogg`);
+                const sndGood = new Audio(`${SP}passgood.ogg`);
+                const sndPowerOn = new Audio(`${SP}poweron.ogg`);
+                const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
+
+                // NOUVEAUX SONS :
+                // ... tes autres sons (k1, kenter, etc.) ...
+
+                // 1. AUGMENTER le son de fond (ex: 0.8 ou 1.0 pour le maximum)
+                const sndBackground = new Audio(`${SP}background_sound.mp3`);
+                sndBackground.loop = true;
+                sndBackground.volume = 0.8; // <-- Change cette valeur (1.0 = 100% du volume du fichier)
+
+                // 2. DIMINUER le son du bug (ex: 0.2 ou 0.3)
+                const sndBug = new Audio(`${SP}bugEffect.mp3`);
+                sndBug.volume = 0.2; // <-- Ajoute cette ligne pour baisser le volume (0.2 = 20%)
+
+                function unlockAudio() {
+                        if (!audioUnlocked) {
+                                audioUnlocked = true;
+                                // Lance le son de fond dès que l'utilisateur interagit avec la page
+                                sndBackground.play().catch(() => { });
+                        }
+                }
+                function playSound(a) { if (!audioUnlocked) return; a.cloneNode(true).play().catch(() => { }); }
+                // ... (le reste de tes fonctions playKey, playNav, playHover reste identique) function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
+                function playNav() {
+                        if (!audioUnlocked) return;
+                        const s = keySounds[Math.floor(Math.random() * 3)].cloneNode(true);
+                        s.volume = 0.45; s.play().catch(() => { });
+                }
+                function playHover() {
+                        if (!audioUnlocked) return;
+                        const s = keySounds[0].cloneNode(true);
+                        s.volume = 0.2; s.play().catch(() => { });
+                }
+
+                // Déblocage global du son au premier clic/frappe
+                document.addEventListener('click', unlockAudio, { once: true });
+                document.addEventListener('keydown', unlockAudio, { once: true });
+
+
                 // ── CONFIG ─────────────────────────────────────────────────────────────
 
                 // EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
@@ -852,9 +900,13 @@
                                         hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
                                         selectedIdx = i;
                                         refreshSelected();
+                                        playHover(); // AUDIO
                                 });
                                 li.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
-                                li.addEventListener("click", () => activateNode(node, i));
+                                li.addEventListener("click", () => {
+                                        unlockAudio(); // AUDIO
+                                        activateNode(node, i)
+                                });
                                 ul.appendChild(li);
                         });
 
@@ -868,9 +920,13 @@
                                         hoverName.textContent = "[ retour ]";
                                         selectedIdx = backIdx;
                                         refreshSelected();
+                                        playHover(); // AUDIO
                                 });
                                 back.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
-                                back.addEventListener("click", () => goBack());
+                                back.addEventListener("click", () => {
+                                        unlockAudio(); // AUDIO
+                                        goBack();
+                                });
                                 ul.appendChild(back);
                         }
 
@@ -892,8 +948,9 @@
                                 window.GLITCH_CONFIG.triggerReverse = false;
                                 node.name = node.name.split('').reverse().join('');
                                 renderList();
+                                playSound(sndBug); // <--- NOUVEAU SON ICI
                                 typeText("ERREUR: Index de fichier corrompu...");
-                                return; // Stoppe l'action pour obliger à recliquer
+                                return;
                         }
 
                         // GLITCH 2 : Échange de position avec un autre fichier
@@ -908,26 +965,31 @@
                                         curNodes[swapIdx] = temp;
 
                                         renderList();
+                                        playSound(sndBug); // <--- NOUVEAU SON ICI
                                         typeText("ERREUR: Décalage du secteur mémoire...");
-                                        return; // Stoppe l'action
+                                        return;
                                 }
                         }
 
                         if (node.type === "dir") {
+                                playSound(sndEnter); // AUDIO
                                 navStack.push({ nodes: curNodes, dirName: node.name });
                                 curNodes = node.children;
                                 selectedIdx = 0;
                                 renderList();
                                 typeText(pick(DIR_REPLIES));
                         } else if (node.corrupted && !fixedFiles[node.fileId]) {
+                                playSound(sndGood); // AUDIO
                                 openEditor(node.fileId);
                         } else {
+                                playSound(sndBad); // AUDIO
                                 typeText(pick(CLEAN_REPLIES));
                         }
                 }
 
                 function goBack() {
                         if (navStack.length === 0) return;
+                        playSound(sndEnter); // AUDIO
                         const prev = navStack.pop();
                         curNodes = prev.nodes;
                         selectedIdx = 0;
@@ -937,6 +999,8 @@
 
                 // ── KEYBOARD NAV ────────────────────────────────────────────────────
                 document.addEventListener("keydown", e => {
+                        unlockAudio(); // AUDIO
+
                         if (gameOver) return;
                         if (!screenEl.querySelector("#file-list")) return;
 
@@ -948,12 +1012,14 @@
                                 refreshSelected();
                                 scrollSelectedIntoView();
                                 updateHoverFromSelected();
+                                playNav(); // AUDIO
                         } else if (e.key === "ArrowUp") {
                                 e.preventDefault();
                                 selectedIdx = (selectedIdx - 1 + total) % total;
                                 refreshSelected();
                                 scrollSelectedIntoView();
                                 updateHoverFromSelected();
+                                playNav(); // AUDIO
                         } else if (e.key === "Enter" || e.key === "ArrowRight") {
                                 e.preventDefault();
                                 if (selectedIdx < curNodes.length) {
@@ -1000,8 +1066,14 @@
                         ta.spellcheck = false;
                         ta.value = file.code;
                         ta.addEventListener("keydown", ev => {
+                                unlockAudio(); // AUDIO
+                                if (ev.key.length === 1 || ev.key === 'Backspace' || ev.key === 'Enter') {
+                                        playKey(); // AUDIO
+                                }
+
                                 if (ev.key === "Tab") {
                                         ev.preventDefault();
+                                        playKey(); // AUDIO
                                         const s = ta.selectionStart;
                                         ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(ta.selectionEnd);
                                         ta.selectionStart = ta.selectionEnd = s + 2;
@@ -1018,7 +1090,9 @@
                         status.id = "exec-status";
 
                         btnExec.addEventListener("click", () => {
+                                unlockAudio(); // AUDIO
                                 if (file.validate(ta.value)) {
+                                        playSound(sndGood); // AUDIO
                                         status.textContent = "✓ VALIDÉ";
                                         status.className = "ok";
                                         ta.disabled = true;
@@ -1027,6 +1101,7 @@
                                         fixedFiles[fileId] = true;
                                         changeIntegrity(+25); // Amène vers la victoire
                                 } else {
+                                        playSound(sndBug); // <--- NOUVEAU SON ICI
                                         status.textContent = "✗ INVALIDE";
                                         status.className = "err";
                                         typeText("Mauvaise correction. Réessaie.");
@@ -1035,6 +1110,8 @@
                         });
 
                         btnReset.addEventListener("click", () => {
+                                unlockAudio(); // AUDIO
+                                playSound(sndEnter); // AUDIO
                                 ta.disabled = false;
                                 btnExec.disabled = false;
                                 ta.value = file.code;
@@ -1043,6 +1120,8 @@
                         });
 
                         btnBack.addEventListener("click", () => {
+                                unlockAudio(); // AUDIO
+                                playSound(sndEnter); // AUDIO
                                 breadcrumb.textContent = buildPath();
                                 renderList();
                                 typeText("...");
@@ -1057,12 +1136,15 @@
                         const b = document.createElement("button");
                         b.className = "term-btn";
                         b.textContent = label;
+                        b.addEventListener('mouseenter', playHover); // AUDIO
                         return b;
                 }
 
                 // ── GAME OVER ───────────────────────────────────────────────────────
                 function triggerGameOver() {
                         gameOver = true;
+                        sndBackground.pause(); // <--- Coupe la musique pour l'ambiance dramatique
+                        playSound(sndBad);
                         typeText("CORRUPTION TOTALE. AU REVOIR.");
 
                         const currentSession = sessionID; // Fix pour stopper la séquence en cas de reset
@@ -1114,6 +1196,7 @@
                 // ── WIN ─────────────────────────────────────────────────────────────
                 function triggerWin() {
                         gameOver = true;
+                        playSound(sndGood); // AUDIO
                         typeText("NON... IMPOSSIBLE.");
                         const currentSession = sessionID; // Fix session
 
@@ -1180,9 +1263,11 @@
 
                 // ── REBOOT ──────────────────────────────────────────────────────────
                 function triggerReboot() {
-                        if (document.getElementById("reboot-screen")) return; // Anti-spam bouton
-                        sessionID++; // Invalide instantanément tout processus en cours
+                        if (document.getElementById("reboot-screen")) return;
+                        sessionID++;
                         const currentSession = sessionID;
+
+                        sndBackground.pause();
 
                         const ol = document.getElementById("overlay-msg");
                         if (ol) ol.remove();
@@ -1219,7 +1304,11 @@
 
                 // ── RESET ───────────────────────────────────────────────────────────
                 function resetGame() {
-                        sessionID++; // Clean total de session
+                        sessionID++;
+                        playSound(sndPowerOn);
+
+                        // <--- Relance la musique au démarrage
+                        if (audioUnlocked) sndBackground.play().catch(() => { });
 
                         // Nettoyage de l'UI
                         crtScreen.classList.remove("glitching");
@@ -1242,6 +1331,8 @@
 
                 // ── POWER BUTTON ────────────────────────────────────────────────────
                 document.getElementById("power-btn").addEventListener("click", () => {
+                        unlockAudio(); // AUDIO
+                        playSound(sndPowerOff); // AUDIO
                         triggerReboot();
                 });
 
