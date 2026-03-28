@@ -666,27 +666,27 @@
                 const sndPowerOn = new Audio(`${SP}poweron.ogg`);
                 const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
 
-                // NOUVEAUX SONS :
-                // ... tes autres sons (k1, kenter, etc.) ...
-
-                // 1. AUGMENTER le son de fond (ex: 0.8 ou 1.0 pour le maximum)
                 const sndBackground = new Audio(`${SP}background_sound.mp3`);
                 sndBackground.loop = true;
-                sndBackground.volume = 0.8; // <-- Change cette valeur (1.0 = 100% du volume du fichier)
+                sndBackground.volume = 0.8;
 
-                // 2. DIMINUER le son du bug (ex: 0.2 ou 0.3)
                 const sndBug = new Audio(`${SP}bugEffect.mp3`);
-                sndBug.volume = 0.2; // <-- Ajoute cette ligne pour baisser le volume (0.2 = 20%)
+                sndBug.volume = 0.2;
+                sndBug.preload = 'auto';
+
+                // --- NOUVEAU SON BUZZ ---
+                const sndBuzz = new Audio(`${SP}buzzSound.mp3`);
+                sndBuzz.preload = 'auto'; // Force la mise en cache pour un lancement immédiat
+                sndBuzz.volume = 0.5; // Ajuste le volume si besoin
 
                 function unlockAudio() {
                         if (!audioUnlocked) {
                                 audioUnlocked = true;
-                                // Lance le son de fond dès que l'utilisateur interagit avec la page
-                                sndBackground.play().catch(() => { });
+                                sndBackground.play().catch(() => { }); // Lance le fond sonore
                         }
                 }
                 function playSound(a) { if (!audioUnlocked) return; a.cloneNode(true).play().catch(() => { }); }
-                // ... (le reste de tes fonctions playKey, playNav, playHover reste identique) function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
+                function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
                 function playNav() {
                         if (!audioUnlocked) return;
                         const s = keySounds[Math.floor(Math.random() * 3)].cloneNode(true);
@@ -698,11 +698,8 @@
                         s.volume = 0.2; s.play().catch(() => { });
                 }
 
-                // Déblocage global du son au premier clic/frappe
                 document.addEventListener('click', unlockAudio, { once: true });
                 document.addEventListener('keydown', unlockAudio, { once: true });
-
-
                 // ── CONFIG ─────────────────────────────────────────────────────────────
 
                 // EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
@@ -1001,17 +998,20 @@
                         }
 
                         if (node.type === "dir") {
-                                playSound(sndEnter); // AUDIO
+                                playSound(sndEnter);
                                 navStack.push({ nodes: curNodes, dirName: node.name });
                                 curNodes = node.children;
                                 selectedIdx = 0;
                                 renderList();
                                 typeText(pick(DIR_REPLIES));
                         } else if (node.corrupted && !fixedFiles[node.fileId]) {
-                                playSound(sndGood); // AUDIO
+                                // --- SON BUZZ IMMÉDIAT ICI ---
+                                sndBuzz.currentTime = 0;
+                                sndBuzz.play().catch(() => { });
+
                                 openEditor(node.fileId);
                         } else {
-                                playSound(sndBad); // AUDIO
+                                playSound(sndBad);
                                 typeText(pick(CLEAN_REPLIES));
                         }
                 }
@@ -1120,18 +1120,21 @@
                         status.id = "exec-status";
 
                         btnExec.addEventListener("click", () => {
-                                unlockAudio(); // AUDIO
+                                unlockAudio();
                                 if (file.validate(ta.value)) {
-                                        playSound(sndGood); // AUDIO
+                                        playSound(sndGood);
                                         status.textContent = "✓ VALIDÉ";
                                         status.className = "ok";
                                         ta.disabled = true;
                                         btnExec.disabled = true;
                                         typeText(file.solution);
                                         fixedFiles[fileId] = true;
-                                        changeIntegrity(+25); // Amène vers la victoire
+                                        changeIntegrity(+25);
                                 } else {
-                                        playSound(sndBug); // <--- NOUVEAU SON ICI
+                                        // --- SON BUG IMMÉDIAT ---
+                                        sndBug.currentTime = 0; // Remet à zéro
+                                        sndBug.play().catch(() => { }); // Joue instantanément sans cloner
+
                                         status.textContent = "✗ INVALIDE";
                                         status.className = "err";
                                         typeText("Mauvaise correction. Réessaie.");
