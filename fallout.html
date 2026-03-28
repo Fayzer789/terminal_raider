@@ -2,1384 +2,1384 @@
 <html lang="fr">
 
 <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>ROBCO TERMLINK</title>
-        <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
-        <style>
-                /* ── VARIABLES ── */
-                :root {
-                        --fg: 26, 255, 128;
-                        --fg-rgb: rgb(26, 255, 128);
-                        --fg-rgba: rgba(26, 255, 128, 0.25);
-                        --casing: #2a2c20;
-                        --casing-shadow: #14150f;
-                        --screen-glow: rgba(26, 255, 128, 0.15);
-                }
-
-                * {
-                        box-sizing: border-box;
-                        margin: 0;
-                        padding: 0;
-                }
-
-                body {
-                        background: #050505;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        overflow: hidden;
-                        font-family: 'Share Tech Mono', monospace;
-                }
-
-                /* ── BOÎTIER ── */
-                .monitor-casing {
-                        background: linear-gradient(135deg, #3a3d2d, var(--casing));
-                        width: 900px;
-                        height: 650px;
-                        border-radius: 60px;
-                        box-shadow:
-                                inset -10px -10px 20px rgba(0, 0, 0, 0.8),
-                                inset 10px 10px 20px rgba(255, 255, 255, 0.05),
-                                0 20px 50px rgba(0, 0, 0, 0.9);
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        padding: 30px 30px 10px;
-                        position: relative;
-                }
-
-                .screen-bezel {
-                        background: #0a0a0a;
-                        width: 100%;
-                        flex-grow: 1;
-                        border-radius: 40px;
-                        box-shadow: inset 0 0 30px #000, 0 3px 0 rgba(255, 255, 255, 0.02);
-                        padding: 25px;
-                        position: relative;
-                }
-
-                .crt-screen {
-                        background: #000;
-                        width: 100%;
-                        height: 100%;
-                        border-radius: 20px;
-                        position: relative;
-                        overflow: hidden;
-                        box-shadow: inset 0 0 60px rgba(0, 0, 0, 1), 0 0 20px var(--screen-glow);
-                }
-
-                .glare {
-                        position: absolute;
-                        top: -10%;
-                        right: -10%;
-                        width: 60%;
-                        height: 120%;
-                        background: radial-gradient(ellipse at center, rgba(200, 255, 200, 0.08) 0%, transparent 70%);
-                        transform: rotate(15deg);
-                        pointer-events: none;
-                        filter: blur(15px);
-                        z-index: 50;
-                }
-
-                .scanlines {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: repeating-linear-gradient(0deg,
-                                        rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 2px,
-                                        transparent 2px, transparent 4px);
-                        pointer-events: none;
-                        z-index: 10;
-                }
-
-                .vignette {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
-                        pointer-events: none;
-                        z-index: 5;
-                }
-
-                /* Animation CRT scanline scroll */
-                @keyframes crtScroll {
-                        0% {
-                                background-position: 0 0;
-                        }
-
-                        100% {
-                                background-position: 0 10000%;
-                        }
-                }
-
-                .bg-terminal {
-                        position: relative;
-                        box-shadow: inset 0 0 2rem;
-                        background-image: linear-gradient(0deg, #0000 10%, #fff1 90%, #0000 100%);
-                        animation: crtScroll 100s linear infinite;
-                        background-size: 100% 80%;
-                }
-
-                .bg-terminal::before {
-                        content: '';
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        pointer-events: none;
-                        user-select: none;
-                        background: repeating-linear-gradient(0deg,
-                                        rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px,
-                                        transparent 1px, transparent 2px);
-                }
-
-                /* ── INNER UI ── */
-                .terminal-inner-ui {
-                        font-family: 'Share Tech Mono', monospace;
-                        color: var(--fg-rgb);
-                        width: 100%;
-                        height: 100%;
-                        padding: 20px;
-                        text-shadow: 0 0 4px var(--fg-rgb), 0 0 10px rgba(26, 255, 128, 0.5);
-                        font-size: 14px;
-                        line-height: 1.3;
-                        letter-spacing: 1px;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 6px;
-                        position: relative;
-                        z-index: 20;
-                }
-
-                /* ── HEADER ── */
-                #header-title {
-                        font-size: 13px;
-                        letter-spacing: 2px;
-                        opacity: 0.9;
-                        border-bottom: 1px solid rgba(26, 255, 128, 0.3);
-                        padding-bottom: 6px;
-                        margin-bottom: 4px;
-                }
-
-                #hacker-line {
-                        font-size: 13px;
-                        min-height: 18px;
-                        color: rgba(26, 255, 128, 0.7);
-                }
-
-                .cursor {
-                        display: inline-block;
-                        width: 8px;
-                        height: 14px;
-                        background: var(--fg-rgb);
-                        animation: blink 1s step-end infinite;
-                        vertical-align: middle;
-                        margin-left: 2px;
-                        box-shadow: 0 0 6px var(--fg-rgb);
-                }
-
-                @keyframes blink {
-
-                        0%,
-                        100% {
-                                opacity: 1;
-                        }
-
-                        50% {
-                                opacity: 0;
-                        }
-                }
-
-                /* ── SCREEN CONTENT ── */
-                #screen {
-                        flex: 1;
-                        overflow: hidden;
-                        position: relative;
-                }
-
-                /* ── FILE LIST (arborescence sobre) ── */
-                #file-list {
-                        list-style: none;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 0;
-                }
-
-                #file-list li {
-                        padding: 2px 4px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        transition: background 0.05s, color 0.05s;
-                        white-space: pre;
-                        user-select: none;
-                        border-left: 2px solid transparent;
-                }
-
-                #file-list li:hover {
-                        background: rgba(26, 255, 128, 0.12);
-                        border-left-color: var(--fg-rgb);
-                }
-
-                #file-list li.selected {
-                        background: rgba(26, 255, 128, 0.2);
-                        border-left-color: var(--fg-rgb);
-                        box-shadow: 0 0 8px rgba(26, 255, 128, 0.15);
-                }
-
-                #file-list li.corrupted {
-                        color: rgba(26, 255, 128, 0.6);
-                        text-decoration: underline wavy rgba(26, 255, 128, 0.4);
-                }
-
-                #file-list li.back {
-                        opacity: 0.6;
-                        margin-top: 4px;
-                        border-top: 1px solid rgba(26, 255, 128, 0.15);
-                        padding-top: 6px;
-                }
-
-                /* ── BREADCRUMB ── */
-                #breadcrumb {
-                        font-size: 11px;
-                        color: rgba(26, 255, 128, 0.5);
-                        letter-spacing: 1px;
-                        margin-bottom: 4px;
-                        min-height: 14px;
-                }
-
-                /* ── STATUS BAR ── */
-                #statusbar {
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 11px;
-                        color: rgba(26, 255, 128, 0.7);
-                        padding: 4px 0 0;
-                        border-top: 1px solid rgba(26, 255, 128, 0.2);
-                        margin-top: 4px;
-                        flex-shrink: 0;
-                }
-
-                /* ── EDITOR ── */
-                #editor-view {
-                        display: flex;
-                        flex-direction: column;
-                        height: 100%;
-                        gap: 6px;
-                }
-
-                #editor-filename {
-                        font-size: 12px;
-                        color: rgba(26, 255, 128, 0.8);
-                        letter-spacing: 1px;
-                }
-
-                #code-editor {
-                        flex: 1;
-                        background: rgba(26, 255, 128, 0.03);
-                        border: 1px solid rgba(26, 255, 128, 0.3);
-                        color: var(--fg-rgb);
-                        font-family: 'Share Tech Mono', monospace;
-                        font-size: 13px;
-                        padding: 10px;
-                        resize: none;
-                        outline: none;
-                        line-height: 1.5;
-                        letter-spacing: 0.5px;
-                        text-shadow: 0 0 4px rgba(26, 255, 128, 0.3);
-                }
-
-                #code-editor:focus {
-                        border-color: rgba(26, 255, 128, 0.6);
-                        box-shadow: 0 0 10px rgba(26, 255, 128, 0.1);
-                }
-
-                #editor-controls {
-                        display: flex;
-                        gap: 10px;
-                        align-items: center;
-                        flex-shrink: 0;
-                }
-
-                .term-btn {
-                        background: transparent;
-                        border: 1px solid rgba(26, 255, 128, 0.4);
-                        color: var(--fg-rgb);
-                        font-family: 'Share Tech Mono', monospace;
-                        font-size: 12px;
-                        padding: 4px 10px;
-                        cursor: pointer;
-                        text-shadow: 0 0 6px var(--fg-rgb);
-                        transition: all 0.1s;
-                        letter-spacing: 1px;
-                }
-
-                .term-btn:hover {
-                        background: rgba(26, 255, 128, 0.15);
-                        box-shadow: 0 0 10px rgba(26, 255, 128, 0.2);
-                }
-
-                .term-btn:disabled {
-                        opacity: 0.3;
-                        cursor: default;
-                }
-
-                #exec-status {
-                        font-size: 12px;
-                        margin-left: 6px;
-                }
-
-                #exec-status.ok {
-                        color: var(--fg-rgb);
-                        text-shadow: 0 0 8px var(--fg-rgb);
-                }
-
-                #exec-status.err {
-                        color: #ff4444;
-                        text-shadow: 0 0 8px #ff4444;
-                }
-
-                /* ── BOTTOM PANEL ── */
-                .bottom-panel {
-                        width: 80%;
-                        height: 55px;
-                        background: linear-gradient(to bottom, #4a4d3a, #2a2c20);
-                        margin-top: 10px;
-                        border-radius: 10px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        padding: 0 40px;
-                        box-shadow:
-                                inset 0 2px 5px rgba(255, 255, 255, 0.05),
-                                inset 0 -5px 10px rgba(0, 0, 0, 0.5),
-                                0 10px 20px rgba(0, 0, 0, 0.5);
-                        flex-shrink: 0;
-                }
-
-                .screw {
-                        width: 14px;
-                        height: 14px;
-                        background: #111;
-                        border-radius: 50%;
-                        border: 1px solid #3d2a15;
-                        box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(255, 255, 255, 0.2);
-                        position: relative;
-                }
-
-                .screw::after {
-                        content: '';
-                        position: absolute;
-                        top: 50%;
-                        left: 20%;
-                        width: 60%;
-                        height: 2px;
-                        background: #333;
-                        transform: translateY(-50%) rotate(45deg);
-                }
-
-                .vents {
-                        width: 200px;
-                        height: 20px;
-                        background: repeating-linear-gradient(90deg, #111, #111 4px, transparent 4px, transparent 12px);
-                        border: 1px solid #3d2a15;
-                        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
-                        border-radius: 2px;
-                }
-
-                .power-button-container {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 5px;
-                }
-
-                .power-button {
-                        width: 25px;
-                        height: 25px;
-                        background: linear-gradient(135deg, #cc2200, #880000);
-                        border-radius: 4px;
-                        border: 2px solid #080808;
-                        box-shadow: 0 0 10px rgba(200, 30, 0, 0.4), inset 2px 2px 5px rgba(255, 255, 255, 0.2);
-                        cursor: pointer;
-                        outline: none;
-                        transition: all 0.1s;
-                }
-
-                .power-button:active {
-                        transform: translateY(2px);
-                }
-
-                .power-text {
-                        font-size: 8px;
-                        color: #666;
-                        letter-spacing: 1px;
-                        text-transform: uppercase;
-                        font-family: 'Courier New', monospace;
-                }
-
-                /* ── ANIMATIONS DE FIN ── */
-                @keyframes glitch {
-                        0% {
-                                transform: translate(0);
-                                filter: none;
-                        }
-
-                        10% {
-                                transform: translate(-3px, 1px);
-                                filter: hue-rotate(90deg);
-                        }
-
-                        20% {
-                                transform: translate(3px, -1px);
-                        }
-
-                        30% {
-                                transform: translate(-2px, 2px);
-                                filter: hue-rotate(180deg) brightness(2);
-                        }
-
-                        40% {
-                                transform: translate(2px, -2px);
-                        }
-
-                        50% {
-                                transform: translate(-4px, 0);
-                                filter: hue-rotate(270deg);
-                        }
-
-                        60% {
-                                transform: translate(4px, 0);
-                        }
-
-                        70% {
-                                transform: translate(0, 3px);
-                                filter: brightness(3);
-                        }
-
-                        80% {
-                                transform: translate(-2px, -3px);
-                        }
-
-                        90% {
-                                transform: translate(2px, 2px);
-                                filter: hue-rotate(180deg);
-                        }
-
-                        100% {
-                                transform: translate(0);
-                                filter: none;
-                        }
-                }
-
-                @keyframes fadeOut {
-                        to {
-                                opacity: 0;
-                        }
-                }
-
-                @keyframes fadeIn {
-                        from {
-                                opacity: 0;
-                        }
-
-                        to {
-                                opacity: 1;
-                        }
-                }
-
-                @keyframes deleteLine {
-                        0% {
-                                opacity: 1;
-                        }
-
-                        30% {
-                                background: rgba(255, 0, 0, 0.3);
-                        }
-
-                        100% {
-                                opacity: 0;
-                                text-decoration: line-through;
-                                color: #ff2200;
-                        }
-                }
-
-                @keyframes scanFlash {
-
-                        0%,
-                        100% {
-                                opacity: 0;
-                        }
-
-                        50% {
-                                opacity: 1;
-                        }
-                }
-
-                @keyframes rebootBlink {
-
-                        0%,
-                        100% {
-                                opacity: 1;
-                        }
-
-                        50% {
-                                opacity: 0;
-                        }
-                }
-
-                .deleting {
-                        animation: deleteLine 0.4s forwards;
-                }
-
-                .glitching {
-                        animation: glitch 0.15s infinite;
-                }
-
-                #overlay-msg {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        z-index: 100;
-                        background: rgba(0, 0, 0, 0.85);
-                        text-align: center;
-                        padding: 20px;
-                        animation: fadeIn 0.5s;
-                }
-
-                #overlay-msg .big-msg {
-                        font-size: 22px;
-                        letter-spacing: 3px;
-                        margin-bottom: 16px;
-                        text-shadow: 0 0 20px var(--fg-rgb), 0 0 40px var(--fg-rgb);
-                }
-
-                #overlay-msg .hacker-speech {
-                        font-size: 13px;
-                        color: rgba(26, 255, 128, 0.7);
-                        letter-spacing: 1px;
-                        line-height: 1.8;
-                        max-width: 500px;
-                }
-
-                .scan-line {
-                        position: absolute;
-                        left: 0;
-                        right: 0;
-                        height: 2px;
-                        background: rgba(26, 255, 128, 0.6);
-                        box-shadow: 0 0 10px var(--fg-rgb), 0 0 20px var(--fg-rgb);
-                        animation: scanFlash 0.08s infinite;
-                }
-
-                #reboot-screen {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: #000;
-                        z-index: 200;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        gap: 10px;
-                        animation: fadeIn 0.3s;
-                }
-
-                #reboot-screen .rb-line {
-                        font-size: 13px;
-                        color: rgba(26, 255, 128, 0.6);
-                        letter-spacing: 2px;
-                        animation: rebootBlink 0.8s infinite;
-                }
-
-                #reboot-screen .rb-title {
-                        font-size: 18px;
-                        letter-spacing: 4px;
-                        color: var(--fg-rgb);
-                        text-shadow: 0 0 20px var(--fg-rgb);
-                        animation: none;
-                }
-        </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROBCO TERMLINK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* ── VARIABLES ── */
+    :root {
+      --fg: 26, 255, 128;
+      --fg-rgb: rgb(26, 255, 128);
+      --fg-rgba: rgba(26, 255, 128, 0.25);
+      --casing: #2a2c20;
+      --casing-shadow: #14150f;
+      --screen-glow: rgba(26, 255, 128, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #050505;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* ── BOÎTIER ── */
+    .monitor-casing {
+      background: linear-gradient(135deg, #3a3d2d, var(--casing));
+      width: 900px;
+      height: 650px;
+      border-radius: 60px;
+      box-shadow:
+        inset -10px -10px 20px rgba(0, 0, 0, 0.8),
+        inset 10px 10px 20px rgba(255, 255, 255, 0.05),
+        0 20px 50px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 30px 10px;
+      position: relative;
+    }
+
+    .screen-bezel {
+      background: #0a0a0a;
+      width: 100%;
+      flex-grow: 1;
+      border-radius: 40px;
+      box-shadow: inset 0 0 30px #000, 0 3px 0 rgba(255, 255, 255, 0.02);
+      padding: 25px;
+      position: relative;
+    }
+
+    .crt-screen {
+      background: #000;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 60px rgba(0, 0, 0, 1), 0 0 20px var(--screen-glow);
+    }
+
+    .glare {
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 60%;
+      height: 120%;
+      background: radial-gradient(ellipse at center, rgba(200, 255, 200, 0.08) 0%, transparent 70%);
+      transform: rotate(15deg);
+      pointer-events: none;
+      filter: blur(15px);
+      z-index: 50;
+    }
+
+    .scanlines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(0deg,
+          rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 2px,
+          transparent 2px, transparent 4px);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Animation CRT scanline scroll */
+    @keyframes crtScroll {
+      0% {
+        background-position: 0 0;
+      }
+
+      100% {
+        background-position: 0 10000%;
+      }
+    }
+
+    .bg-terminal {
+      position: relative;
+      box-shadow: inset 0 0 2rem;
+      background-image: linear-gradient(0deg, #0000 10%, #fff1 90%, #0000 100%);
+      animation: crtScroll 100s linear infinite;
+      background-size: 100% 80%;
+    }
+
+    .bg-terminal::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      user-select: none;
+      background: repeating-linear-gradient(0deg,
+          rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px,
+          transparent 1px, transparent 2px);
+    }
+
+    /* ── INNER UI ── */
+    .terminal-inner-ui {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--fg-rgb);
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      text-shadow: 0 0 4px var(--fg-rgb), 0 0 10px rgba(26, 255, 128, 0.5);
+      font-size: 14px;
+      line-height: 1.3;
+      letter-spacing: 1px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      z-index: 20;
+    }
+
+    /* ── HEADER ── */
+    #header-title {
+      font-size: 13px;
+      letter-spacing: 2px;
+      opacity: 0.9;
+      border-bottom: 1px solid rgba(26, 255, 128, 0.3);
+      padding-bottom: 6px;
+      margin-bottom: 4px;
+    }
+
+    #hacker-line {
+      font-size: 13px;
+      min-height: 18px;
+      color: rgba(26, 255, 128, 0.7);
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--fg-rgb);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+      box-shadow: 0 0 6px var(--fg-rgb);
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    /* ── SCREEN CONTENT ── */
+    #screen {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── FILE LIST (arborescence sobre) ── */
+    #file-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #file-list li {
+      padding: 2px 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.05s, color 0.05s;
+      white-space: pre;
+      user-select: none;
+      border-left: 2px solid transparent;
+    }
+
+    #file-list li:hover {
+      background: rgba(26, 255, 128, 0.12);
+      border-left-color: var(--fg-rgb);
+    }
+
+    #file-list li.selected {
+      background: rgba(26, 255, 128, 0.2);
+      border-left-color: var(--fg-rgb);
+      box-shadow: 0 0 8px rgba(26, 255, 128, 0.15);
+    }
+
+    #file-list li.corrupted {
+      color: rgba(26, 255, 128, 0.6);
+      text-decoration: underline wavy rgba(26, 255, 128, 0.4);
+    }
+
+    #file-list li.back {
+      opacity: 0.6;
+      margin-top: 4px;
+      border-top: 1px solid rgba(26, 255, 128, 0.15);
+      padding-top: 6px;
+    }
+
+    /* ── BREADCRUMB ── */
+    #breadcrumb {
+      font-size: 11px;
+      color: rgba(26, 255, 128, 0.5);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      min-height: 14px;
+    }
+
+    /* ── STATUS BAR ── */
+    #statusbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: rgba(26, 255, 128, 0.7);
+      padding: 4px 0 0;
+      border-top: 1px solid rgba(26, 255, 128, 0.2);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── EDITOR ── */
+    #editor-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 6px;
+    }
+
+    #editor-filename {
+      font-size: 12px;
+      color: rgba(26, 255, 128, 0.8);
+      letter-spacing: 1px;
+    }
+
+    #code-editor {
+      flex: 1;
+      background: rgba(26, 255, 128, 0.03);
+      border: 1px solid rgba(26, 255, 128, 0.3);
+      color: var(--fg-rgb);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 10px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 4px rgba(26, 255, 128, 0.3);
+    }
+
+    #code-editor:focus {
+      border-color: rgba(26, 255, 128, 0.6);
+      box-shadow: 0 0 10px rgba(26, 255, 128, 0.1);
+    }
+
+    #editor-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .term-btn {
+      background: transparent;
+      border: 1px solid rgba(26, 255, 128, 0.4);
+      color: var(--fg-rgb);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      text-shadow: 0 0 6px var(--fg-rgb);
+      transition: all 0.1s;
+      letter-spacing: 1px;
+    }
+
+    .term-btn:hover {
+      background: rgba(26, 255, 128, 0.15);
+      box-shadow: 0 0 10px rgba(26, 255, 128, 0.2);
+    }
+
+    .term-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    #exec-status {
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    #exec-status.ok {
+      color: var(--fg-rgb);
+      text-shadow: 0 0 8px var(--fg-rgb);
+    }
+
+    #exec-status.err {
+      color: #ff4444;
+      text-shadow: 0 0 8px #ff4444;
+    }
+
+    /* ── BOTTOM PANEL ── */
+    .bottom-panel {
+      width: 80%;
+      height: 55px;
+      background: linear-gradient(to bottom, #4a4d3a, #2a2c20);
+      margin-top: 10px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.05),
+        inset 0 -5px 10px rgba(0, 0, 0, 0.5),
+        0 10px 20px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+    }
+
+    .screw {
+      width: 14px;
+      height: 14px;
+      background: #111;
+      border-radius: 50%;
+      border: 1px solid #3d2a15;
+      box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+
+    .screw::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 20%;
+      width: 60%;
+      height: 2px;
+      background: #333;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .vents {
+      width: 200px;
+      height: 20px;
+      background: repeating-linear-gradient(90deg, #111, #111 4px, transparent 4px, transparent 12px);
+      border: 1px solid #3d2a15;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+      border-radius: 2px;
+    }
+
+    .power-button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .power-button {
+      width: 25px;
+      height: 25px;
+      background: linear-gradient(135deg, #cc2200, #880000);
+      border-radius: 4px;
+      border: 2px solid #080808;
+      box-shadow: 0 0 10px rgba(200, 30, 0, 0.4), inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      outline: none;
+      transition: all 0.1s;
+    }
+
+    .power-button:active {
+      transform: translateY(2px);
+    }
+
+    .power-text {
+      font-size: 8px;
+      color: #666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── ANIMATIONS DE FIN ── */
+    @keyframes glitch {
+      0% {
+        transform: translate(0);
+        filter: none;
+      }
+
+      10% {
+        transform: translate(-3px, 1px);
+        filter: hue-rotate(90deg);
+      }
+
+      20% {
+        transform: translate(3px, -1px);
+      }
+
+      30% {
+        transform: translate(-2px, 2px);
+        filter: hue-rotate(180deg) brightness(2);
+      }
+
+      40% {
+        transform: translate(2px, -2px);
+      }
+
+      50% {
+        transform: translate(-4px, 0);
+        filter: hue-rotate(270deg);
+      }
+
+      60% {
+        transform: translate(4px, 0);
+      }
+
+      70% {
+        transform: translate(0, 3px);
+        filter: brightness(3);
+      }
+
+      80% {
+        transform: translate(-2px, -3px);
+      }
+
+      90% {
+        transform: translate(2px, 2px);
+        filter: hue-rotate(180deg);
+      }
+
+      100% {
+        transform: translate(0);
+        filter: none;
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes deleteLine {
+      0% {
+        opacity: 1;
+      }
+
+      30% {
+        background: rgba(255, 0, 0, 0.3);
+      }
+
+      100% {
+        opacity: 0;
+        text-decoration: line-through;
+        color: #ff2200;
+      }
+    }
+
+    @keyframes scanFlash {
+
+      0%,
+      100% {
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes rebootBlink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .deleting {
+      animation: deleteLine 0.4s forwards;
+    }
+
+    .glitching {
+      animation: glitch 0.15s infinite;
+    }
+
+    #overlay-msg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.85);
+      text-align: center;
+      padding: 20px;
+      animation: fadeIn 0.5s;
+    }
+
+    #overlay-msg .big-msg {
+      font-size: 22px;
+      letter-spacing: 3px;
+      margin-bottom: 16px;
+      text-shadow: 0 0 20px var(--fg-rgb), 0 0 40px var(--fg-rgb);
+    }
+
+    #overlay-msg .hacker-speech {
+      font-size: 13px;
+      color: rgba(26, 255, 128, 0.7);
+      letter-spacing: 1px;
+      line-height: 1.8;
+      max-width: 500px;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(26, 255, 128, 0.6);
+      box-shadow: 0 0 10px var(--fg-rgb), 0 0 20px var(--fg-rgb);
+      animation: scanFlash 0.08s infinite;
+    }
+
+    #reboot-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.3s;
+    }
+
+    #reboot-screen .rb-line {
+      font-size: 13px;
+      color: rgba(26, 255, 128, 0.6);
+      letter-spacing: 2px;
+      animation: rebootBlink 0.8s infinite;
+    }
+
+    #reboot-screen .rb-title {
+      font-size: 18px;
+      letter-spacing: 4px;
+      color: var(--fg-rgb);
+      text-shadow: 0 0 20px var(--fg-rgb);
+      animation: none;
+    }
+  </style>
 </head>
 
 <body>
 
-        <div class="monitor-casing">
-                <div class="screen-bezel">
-                        <div class="crt-screen bg-terminal">
-                                <div class="glare"></div>
-                                <div class="scanlines"></div>
-                                <div class="vignette"></div>
+  <div class="monitor-casing">
+    <div class="screen-bezel">
+      <div class="crt-screen bg-terminal">
+        <div class="glare"></div>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
 
-                                <div class="terminal-inner-ui">
-                                        <div id="header-title">ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL</div>
-                                        <div id="hacker-line"><span class="cursor"></span></div>
+        <div class="terminal-inner-ui">
+          <div id="header-title">ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL</div>
+          <div id="hacker-line"><span class="cursor"></span></div>
 
-                                        <div id="breadcrumb">/</div>
+          <div id="breadcrumb">/</div>
 
-                                        <div id="screen"></div>
+          <div id="screen"></div>
 
-                                        <div id="statusbar">
-                                                <span id="hover-name"></span>
-                                                <span id="integrity-bar"></span>
-                                        </div>
-                                </div>
-                        </div>
-                </div>
-
-                <div class="bottom-panel">
-                        <div class="screw"></div>
-                        <div class="vents"></div>
-                        <div class="power-button-container">
-                                <button class="power-button" id="power-btn" title="Redémarrer"></button>
-                                <div class="power-text">POWER</div>
-                        </div>
-                        <div class="vents"></div>
-                        <div class="screw"></div>
-                </div>
+          <div id="statusbar">
+            <span id="hover-name"></span>
+            <span id="integrity-bar"></span>
+          </div>
         </div>
-
-        <script>
-                // ── AUDIO SYSTEM (INJECTÉ) ──────────────────────────────────────────
-                const SP = './sounds/';
-                let audioUnlocked = false;
-
-                const keySounds = Array.from({ length: 10 }, (_, i) => new Audio(`${SP}k${i + 1}.ogg`));
-                const sndEnter = new Audio(`${SP}kenter.ogg`);
-                const sndBad = new Audio(`${SP}passbad.ogg`);
-                const sndGood = new Audio(`${SP}passgood.ogg`);
-                const sndPowerOn = new Audio(`${SP}poweron.ogg`);
-                const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
-
-                const sndBackground = new Audio(`${SP}background_sound.mp3`);
-                sndBackground.loop = true;
-                sndBackground.volume = 0.8;
-
-                const sndBug = new Audio(`${SP}bugEffect.mp3`);
-                sndBug.volume = 0.2;
-                sndBug.preload = 'auto';
-
-                // --- NOUVEAU SON BUZZ ---
-                const sndBuzz = new Audio(`${SP}buzzSound.mp3`);
-                sndBuzz.preload = 'auto'; // Force la mise en cache pour un lancement immédiat
-                sndBuzz.volume = 0.5; // Ajuste le volume si besoin
-
-                function unlockAudio() {
-                        if (!audioUnlocked) {
-                                audioUnlocked = true;
-                                sndBackground.play().catch(() => { }); // Lance le fond sonore
-                        }
-                }
-                function playSound(a) { if (!audioUnlocked) return; a.cloneNode(true).play().catch(() => { }); }
-                function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
-                function playNav() {
-                        if (!audioUnlocked) return;
-                        const s = keySounds[Math.floor(Math.random() * 3)].cloneNode(true);
-                        s.volume = 0.45; s.play().catch(() => { });
-                }
-                function playHover() {
-                        if (!audioUnlocked) return;
-                        const s = keySounds[0].cloneNode(true);
-                        s.volume = 0.2; s.play().catch(() => { });
-                }
-
-                document.addEventListener('click', unlockAudio, { once: true });
-                document.addEventListener('keydown', unlockAudio, { once: true });
-                // ── CONFIG ─────────────────────────────────────────────────────────────
-
-                // EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
-                // GLITCH_CONFIG.triggerSwap = true;    (pour forcer l'échange de 2 fichiers au prochain clic)
-                // GLITCH_CONFIG.triggerReverse = true; (pour forcer l'inversion du nom au prochain clic)
-                window.GLITCH_CONFIG = {
-                        swapProb: 0.02,      // 2% de chance que ça arrive naturellement
-                        reverseProb: 0.02,   // 2% de chance que ça arrive naturellement
-                        triggerSwap: false,
-                        triggerReverse: false
-                };
-
-                const CLEAN_REPLIES = [
-                        "Non, pas là...",
-                        "Rien d'intéressant ici.",
-                        "Fichier propre. Cherche ailleurs.",
-                        "Fausse piste.",
-                        "Tu crois vraiment que ce serait aussi évident ?",
-                        "Nan. Continue de chercher.",
-                        "Haha. Non.",
-                        "Propre. Trop propre.",
-                        "Niet. Continue de chercher.",
-                        "Cherche les noms bizarres.",
-                        "Tu perds du temps. Ils arrivent.",
-                        "Prends ton temps, je regarde tes fichiers secrets...",
-                ];
-
-                const DIR_REPLIES = [
-                        "Intéressant... regarde là-dedans.",
-                        "Peut-être quelque chose ici.",
-                        "Continue de chercher.",
-                        "Ce dossier... fouille-le.",
-                        "Chaud, chaud...Froid",
-                ];
-
-                const CORRUPTED_FILES = {
-                        "boucleprob.dhd": {
-                                name: "boucleprob.dhd",
-                                code: `// Corrigez la condition d'arrêt\n\nfunction compter(n) {\n  let i = 0;\n  while (i = n) {   // <- bug ici\n    console.log(i);\n    i++;\n  }\n}`,
-                                reply: "La condition est cassée. Tu vois le bug ?",
-                                solution: "Boucle corrigée. Buffer libéré.",
-                                validate: c => c.includes("i < n") || c.includes("i<n"),
-                        },
-                        "c0r3dump.xvz": {
-                                name: "c0r3dump.xvz",
-                                code: `// Ajoutez le cas de base manquant\n\nfunction factorielle(n) {\n  // cas de base manquant !\n  return n * factorielle(n - 1);\n}`,
-                                reply: "Stack overflow garanti. Cas de base manquant.",
-                                solution: "Récursion stabilisée. Stack overflow évité.",
-                                validate: c => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
-                        },
-                        "net_ghost.!!x": {
-                                name: "net_ghost.!!x",
-                                code: `// Corrigez la déclaration de variable\n\nfunction saluer(nom) {\n  message = "Accès autorisé, " + nom;\n  return message;\n}`,
-                                reply: "Variable globale non déclarée. Fuite mémoire.",
-                                solution: "Variable déclarée. Fuite colmatée.",
-                                validate: c => /\b(let|const|var)\s+message/.test(c),
-                        },
-                        "sys_krnl.0x9f": {
-                                name: "sys_krnl.0x9f",
-                                code: `// Protégez contre la division par zéro\n\nfunction diviser(a, b) {\n  return a / b;\n}`,
-                                reply: "Division par zéro possible. Protège ça.",
-                                solution: "Division sécurisée. Noyau stabilisé.",
-                                validate: c => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
-                        },
-                };
-
-                const FILE_SYSTEM = [
-                        {
-                                type: "dir", name: "bin", children: [
-                                        { type: "file", name: "ls" },
-                                        { type: "file", name: "chmod" },
-                                        { type: "file", name: "c0r3dump.xvz", corrupted: true, fileId: "c0r3dump.xvz" },
-                                ]
-                        },
-                        {
-                                type: "dir", name: "etc", children: [
-                                        { type: "file", name: "hosts" },
-                                        { type: "file", name: "passwd" },
-                                        { type: "file", name: "net_ghost.!!x", corrupted: true, fileId: "net_ghost.!!x" },
-                                        {
-                                                type: "dir", name: "network", children: [
-                                                        { type: "file", name: "interfaces" },
-                                                        { type: "file", name: "resolv.conf" },
-                                                ]
-                                        },
-                                ]
-                        },
-                        {
-                                type: "dir", name: "lib", children: [
-                                        { type: "file", name: "libc.so" },
-                                        { type: "file", name: "libm.so" },
-                                        { type: "file", name: "sys_krnl.0x9f", corrupted: true, fileId: "sys_krnl.0x9f" },
-                                ]
-                        },
-                        {
-                                type: "dir", name: "home", children: [
-                                        {
-                                                type: "dir", name: "operator", children: [
-                                                        { type: "file", name: ".bashrc" },
-                                                        { type: "file", name: "boucleprob.dhd", corrupted: true, fileId: "boucleprob.dhd" },
-                                                ]
-                                        },
-                                ]
-                        },
-                        {
-                                type: "dir", name: "tmp", children: [
-                                        { type: "file", name: "session.lock" },
-                                        { type: "file", name: "cache" },
-                                ]
-                        },
-                ];
-
-                // ── DOM ─────────────────────────────────────────────────────────────
-                const hackerLine = document.getElementById("hacker-line");
-                const screenEl = document.getElementById("screen");
-                const hoverName = document.getElementById("hover-name");
-                const integrityEl = document.getElementById("integrity-bar");
-                const breadcrumb = document.getElementById("breadcrumb");
-                const crtScreen = document.querySelector(".crt-screen");
-
-                // ── STATE ───────────────────────────────────────────────────────────
-                let navStack = [];
-                let curNodes = FILE_SYSTEM;
-                let integrity = 90; // Modifié : démarre à 90%
-                let selectedIdx = 0;
-                let gameOver = false;
-                let _typTimer = null;
-                let sessionID = 0; // Ajouté : identifiant de session pour tuer les setTimeouts
-
-                // ── TYPING ──────────────────────────────────────────────────────────
-                const TYPING_SPEED = 50;
-
-                function typeText(text) {
-                        if (_typTimer) clearTimeout(_typTimer);
-                        hackerLine.innerHTML = "";
-                        let i = 0;
-                        const cursor = document.createElement("span");
-                        cursor.className = "cursor";
-                        (function tick() {
-                                hackerLine.textContent = text.slice(0, i);
-                                hackerLine.appendChild(cursor);
-                                if (i++ < text.length) _typTimer = setTimeout(tick, TYPING_SPEED);
-                        })();
-                }
-
-                // ── INTEGRITY ───────────────────────────────────────────────────────
-                function renderIntegrity() {
-                        const BARS = 10;
-                        const on = Math.round((integrity / 100) * BARS);
-                        integrityEl.textContent = `INTÉGRITÉ [${"█".repeat(on)}${"░".repeat(BARS - on)}] ${integrity}%`;
-                }
-
-                function changeIntegrity(delta) {
-                        integrity = Math.max(0, Math.min(100, integrity + delta));
-                        renderIntegrity();
-                        if (integrity <= 0) triggerGameOver();
-                        if (integrity >= 100 && checkAllFixed()) triggerWin();
-                }
-
-                function checkAllFixed() {
-                        const total = Object.keys(CORRUPTED_FILES).length;
-                        return fixedCount() >= total;
-                }
-
-                function fixedCount() {
-                        return Object.values(fixedFiles).filter(Boolean).length;
-                }
-
-                const fixedFiles = {};
-
-                // ── BREADCRUMB ──────────────────────────────────────────────────────
-                function buildPath() {
-                        if (navStack.length === 0) return "/";
-                        return "/" + navStack.map(s => s.dirName || "?").join("/") + "/";
-                }
-
-                //GLITCH
-                function glitch() {
-                        const div = document.createElement("div");
-                        div.style.position = "fixed";
-                        div.style.top = 0;
-                        div.style.left = 0;
-                        div.style.width = "100%";
-                        div.style.height = "100%";
-                        div.style.pointerEvents = "none";
-                        div.style.zIndex = 9999;
-                        div.style.backdropFilter = "contrast(200%) saturate(300%) hue-rotate(90deg)";
-                        document.body.appendChild(div);
-
-                        const interval = setInterval(() => {
-                                document.body.style.transform =
-                                        `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) skew(${Math.random() * 10 - 5}deg)`;
-
-                                document.body.style.filter =
-                                        `hue-rotate(${Math.random() * 360}deg) contrast(${100 + Math.random() * 200}%)`;
-                        }, 50);
-
-                        setTimeout(() => {
-                                clearInterval(interval);
-                                document.body.style.transform = "";
-                                document.body.style.filter = "";
-                                div.remove();
-                        }, 1000);
-                }
-
-                // ── RENDER LIST ─────────────────────────────────────────────────────
-                function renderList() {
-                        screenEl.innerHTML = "";
-                        selectedIdx = Math.min(selectedIdx, curNodes.length - 1 + (navStack.length > 0 ? 1 : 0));
-
-                        breadcrumb.textContent = buildPath();
-                        const ul = document.createElement("ul");
-                        ul.id = "file-list";
-
-                        curNodes.forEach((node, i) => {
-                                const li = document.createElement("li");
-                                const prefix = "> ";
-                                const suffix = node.type === "dir" ? node.name + "/" : node.name;
-                                li.textContent = prefix + suffix;
-                                if (node.corrupted && !fixedFiles[node.fileId]) li.classList.add("corrupted");
-                                if (i === selectedIdx) li.classList.add("selected");
-
-                                li.addEventListener("mouseenter", () => {
-                                        hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
-                                        selectedIdx = i;
-                                        refreshSelected();
-                                        playHover(); // AUDIO
-                                });
-                                li.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
-                                li.addEventListener("click", () => {
-                                        unlockAudio(); // AUDIO
-                                        activateNode(node, i)
-                                });
-                                ul.appendChild(li);
-                        });
-
-                        if (navStack.length > 0) {
-                                const backIdx = curNodes.length;
-                                const back = document.createElement("li");
-                                back.textContent = "> ../";
-                                back.className = "back";
-                                if (selectedIdx === backIdx) back.classList.add("selected");
-                                back.addEventListener("mouseenter", () => {
-                                        hoverName.textContent = "[ retour ]";
-                                        selectedIdx = backIdx;
-                                        refreshSelected();
-                                        playHover(); // AUDIO
-                                });
-                                back.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
-                                back.addEventListener("click", () => {
-                                        unlockAudio(); // AUDIO
-                                        goBack();
-                                });
-                                ul.appendChild(back);
-                        }
-
-                        screenEl.appendChild(ul);
-                }
-
-                function refreshSelected() {
-                        const items = screenEl.querySelectorAll("#file-list li");
-                        items.forEach((li, i) => {
-                                li.classList.toggle("selected", i === selectedIdx);
-                        });
-                }
-
-                function activateNode(node, idx) {
-                        if (gameOver) return;
-
-                        // GLITCH 1 : Inversion du nom du fichier
-                        if (window.GLITCH_CONFIG.triggerReverse || Math.random() < window.GLITCH_CONFIG.reverseProb) {
-                                window.GLITCH_CONFIG.triggerReverse = false;
-                                node.name = node.name.split('').reverse().join('');
-                                renderList();
-                                playSound(sndBug); // <--- NOUVEAU SON ICI
-                                typeText("ERREUR: Index de fichier corrompu...");
-                                return;
-                        }
-
-                        // GLITCH 2 : Échange de position avec un autre fichier
-                        if (window.GLITCH_CONFIG.triggerSwap || Math.random() < window.GLITCH_CONFIG.swapProb) {
-                                window.GLITCH_CONFIG.triggerSwap = false;
-                                if (curNodes.length > 1) {
-                                        let swapIdx = idx;
-                                        while (swapIdx === idx) swapIdx = Math.floor(Math.random() * curNodes.length);
-
-                                        let temp = curNodes[idx];
-                                        curNodes[idx] = curNodes[swapIdx];
-                                        curNodes[swapIdx] = temp;
-
-                                        renderList();
-                                        playSound(sndBug); // <--- NOUVEAU SON ICI
-                                        typeText("ERREUR: Décalage du secteur mémoire...");
-                                        return;
-                                }
-                        }
-
-                        if (node.type === "dir") {
-                                playSound(sndEnter);
-                                navStack.push({ nodes: curNodes, dirName: node.name });
-                                curNodes = node.children;
-                                selectedIdx = 0;
-                                renderList();
-                                typeText(pick(DIR_REPLIES));
-                        } else if (node.corrupted && !fixedFiles[node.fileId]) {
-                                // --- SON BUZZ IMMÉDIAT ICI ---
-                                sndBuzz.currentTime = 0;
-                                sndBuzz.play().catch(() => { });
-
-                                openEditor(node.fileId);
-                        } else {
-                                playSound(sndBad);
-                                typeText(pick(CLEAN_REPLIES));
-                        }
-                }
-
-                function goBack() {
-                        if (navStack.length === 0) return;
-                        playSound(sndEnter); // AUDIO
-                        const prev = navStack.pop();
-                        curNodes = prev.nodes;
-                        selectedIdx = 0;
-                        renderList();
-                        typeText("...");
-                }
-
-                // ── KEYBOARD NAV ────────────────────────────────────────────────────
-                document.addEventListener("keydown", e => {
-                        unlockAudio(); // AUDIO
-
-                        if (gameOver) return;
-                        if (!screenEl.querySelector("#file-list")) return;
-
-                        const total = curNodes.length + (navStack.length > 0 ? 1 : 0);
-
-                        if (e.key === "ArrowDown") {
-                                e.preventDefault();
-                                selectedIdx = (selectedIdx + 1) % total;
-                                refreshSelected();
-                                scrollSelectedIntoView();
-                                updateHoverFromSelected();
-                                playNav(); // AUDIO
-                        } else if (e.key === "ArrowUp") {
-                                e.preventDefault();
-                                selectedIdx = (selectedIdx - 1 + total) % total;
-                                refreshSelected();
-                                scrollSelectedIntoView();
-                                updateHoverFromSelected();
-                                playNav(); // AUDIO
-                        } else if (e.key === "Enter" || e.key === "ArrowRight") {
-                                e.preventDefault();
-                                if (selectedIdx < curNodes.length) {
-                                        activateNode(curNodes[selectedIdx], selectedIdx);
-                                } else if (navStack.length > 0) {
-                                        goBack();
-                                }
-                        } else if (e.key === "ArrowLeft" || e.key === "Backspace") {
-                                e.preventDefault();
-                                goBack();
-                        }
-                });
-
-                function scrollSelectedIntoView() {
-                        const items = screenEl.querySelectorAll("#file-list li");
-                        if (items[selectedIdx]) items[selectedIdx].scrollIntoView({ block: "nearest" });
-                }
-
-                function updateHoverFromSelected() {
-                        if (selectedIdx < curNodes.length) {
-                                const node = curNodes[selectedIdx];
-                                hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
-                        } else {
-                                hoverName.textContent = "[ retour ]";
-                        }
-                }
-
-                // ── EDITOR ──────────────────────────────────────────────────────────
-                function openEditor(fileId) {
-                        glitch();
-                        const file = CORRUPTED_FILES[fileId];
-                        if (!file) return;
-                        typeText(file.reply);
-                        screenEl.innerHTML = "";
-                        breadcrumb.textContent = buildPath() + file.name;
-
-                        const view = document.createElement("div");
-                        view.id = "editor-view";
-                        const fname = document.createElement("div");
-                        fname.id = "editor-filename";
-                        fname.textContent = `⚠ ${file.name} — CORRECTION REQUISE`;
-
-                        const ta = document.createElement("textarea");
-                        ta.id = "code-editor";
-                        ta.spellcheck = false;
-                        ta.value = file.code;
-                        ta.addEventListener("keydown", ev => {
-                                unlockAudio(); // AUDIO
-                                if (ev.key.length === 1 || ev.key === 'Backspace' || ev.key === 'Enter') {
-                                        playKey(); // AUDIO
-                                }
-
-                                if (ev.key === "Tab") {
-                                        ev.preventDefault();
-                                        playKey(); // AUDIO
-                                        const s = ta.selectionStart;
-                                        ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(ta.selectionEnd);
-                                        ta.selectionStart = ta.selectionEnd = s + 2;
-                                }
-                        });
-
-                        const controls = document.createElement("div");
-                        controls.id = "editor-controls";
-
-                        const btnExec = mkBtn("[ EXÉCUTER ]");
-                        const btnReset = mkBtn("[ RESET ]");
-                        const btnBack = mkBtn("[ RETOUR ]");
-                        const status = document.createElement("span");
-                        status.id = "exec-status";
-
-                        btnExec.addEventListener("click", () => {
-                                unlockAudio();
-                                if (file.validate(ta.value)) {
-                                        playSound(sndGood);
-                                        status.textContent = "✓ VALIDÉ";
-                                        status.className = "ok";
-                                        ta.disabled = true;
-                                        btnExec.disabled = true;
-                                        typeText(file.solution);
-                                        fixedFiles[fileId] = true;
-                                        changeIntegrity(+25);
-                                } else {
-                                        // --- SON BUG IMMÉDIAT ---
-                                        sndBug.currentTime = 0; // Remet à zéro
-                                        sndBug.play().catch(() => { }); // Joue instantanément sans cloner
-
-                                        status.textContent = "✗ INVALIDE";
-                                        status.className = "err";
-                                        typeText("Mauvaise correction. Réessaie.");
-                                        changeIntegrity(-15);
-                                }
-                        });
-
-                        btnReset.addEventListener("click", () => {
-                                unlockAudio(); // AUDIO
-                                playSound(sndEnter); // AUDIO
-                                ta.disabled = false;
-                                btnExec.disabled = false;
-                                ta.value = file.code;
-                                status.textContent = "";
-                                status.className = "";
-                        });
-
-                        btnBack.addEventListener("click", () => {
-                                unlockAudio(); // AUDIO
-                                playSound(sndEnter); // AUDIO
-                                breadcrumb.textContent = buildPath();
-                                renderList();
-                                typeText("...");
-                        });
-
-                        controls.append(btnExec, btnReset, btnBack, status);
-                        view.append(fname, ta, controls);
-                        screenEl.appendChild(view);
-                }
-
-                function mkBtn(label) {
-                        const b = document.createElement("button");
-                        b.className = "term-btn";
-                        b.textContent = label;
-                        b.addEventListener('mouseenter', playHover); // AUDIO
-                        return b;
-                }
-
-                // ── GAME OVER ───────────────────────────────────────────────────────
-                function triggerGameOver() {
-                        gameOver = true;
-                        sndBackground.pause(); // <--- Coupe la musique pour l'ambiance dramatique
-                        playSound(sndBad);
-                        typeText("CORRUPTION TOTALE. AU REVOIR.");
-
-                        const currentSession = sessionID; // Fix pour stopper la séquence en cas de reset
-
-                        crtScreen.classList.add("glitching");
-
-                        const allItems = screenEl.querySelectorAll("li, div, textarea");
-                        let delay = 200;
-                        allItems.forEach(el => {
-                                setTimeout(() => {
-                                        if (sessionID !== currentSession) return;
-                                        el.classList.add("deleting");
-                                }, delay);
-                                delay += 120;
-                        });
-
-                        setTimeout(() => {
-                                if (sessionID !== currentSession) return;
-                                crtScreen.classList.remove("glitching");
-                                screenEl.innerHTML = "";
-                                breadcrumb.textContent = "";
-                                integrityEl.textContent = "INTÉGRITÉ [░░░░░░░░░░] 0%";
-
-                                const overlay = document.createElement("div");
-                                overlay.id = "overlay-msg";
-
-                                const bigMsg = document.createElement("div");
-                                bigMsg.className = "big-msg";
-                                bigMsg.textContent = "// SYSTÈME COMPROMIS //";
-
-                                const speech = document.createElement("div");
-                                speech.className = "hacker-speech";
-                                speech.innerHTML = `
+      </div>
+    </div>
+
+    <div class="bottom-panel">
+      <div class="screw"></div>
+      <div class="vents"></div>
+      <div class="power-button-container">
+        <button class="power-button" id="power-btn" title="Redémarrer"></button>
+        <div class="power-text">POWER</div>
+      </div>
+      <div class="vents"></div>
+      <div class="screw"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── AUDIO SYSTEM (INJECTÉ) ──────────────────────────────────────────
+    const SP = './sounds/';
+    let audioUnlocked = false;
+
+    const keySounds = Array.from({ length: 10 }, (_, i) => new Audio(`${SP}k${i + 1}.ogg`));
+    const sndEnter = new Audio(`${SP}kenter.ogg`);
+    const sndBad = new Audio(`${SP}passbad.ogg`);
+    const sndGood = new Audio(`${SP}passgood.ogg`);
+    const sndPowerOn = new Audio(`${SP}poweron.ogg`);
+    const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
+
+    const sndBackground = new Audio(`${SP}background_sound.mp3`);
+    sndBackground.loop = true;
+    sndBackground.volume = 0.8;
+
+    const sndBug = new Audio(`${SP}bugEffect.mp3`);
+    sndBug.volume = 0.2;
+    sndBug.preload = 'auto';
+
+    // --- NOUVEAU SON BUZZ ---
+    const sndBuzz = new Audio(`${SP}buzzSound.mp3`);
+    sndBuzz.preload = 'auto'; // Force la mise en cache pour un lancement immédiat
+    sndBuzz.volume = 0.5; // Ajuste le volume si besoin
+
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        audioUnlocked = true;
+        sndBackground.play().catch(() => { }); // Lance le fond sonore
+      }
+    }
+    function playSound(a) { if (!audioUnlocked) return; a.cloneNode(true).play().catch(() => { }); }
+    function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
+    function playNav() {
+      if (!audioUnlocked) return;
+      const s = keySounds[Math.floor(Math.random() * 3)].cloneNode(true);
+      s.volume = 0.45; s.play().catch(() => { });
+    }
+    function playHover() {
+      if (!audioUnlocked) return;
+      const s = keySounds[0].cloneNode(true);
+      s.volume = 0.2; s.play().catch(() => { });
+    }
+
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+    // ── CONFIG ─────────────────────────────────────────────────────────────
+
+    // EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
+    // GLITCH_CONFIG.triggerSwap = true;    (pour forcer l'échange de 2 fichiers au prochain clic)
+    // GLITCH_CONFIG.triggerReverse = true; (pour forcer l'inversion du nom au prochain clic)
+    window.GLITCH_CONFIG = {
+      swapProb: 0.02,      // 2% de chance que ça arrive naturellement
+      reverseProb: 0.02,   // 2% de chance que ça arrive naturellement
+      triggerSwap: false,
+      triggerReverse: false
+    };
+
+    const CLEAN_REPLIES = [
+      "Non, pas là...",
+      "Rien d'intéressant ici.",
+      "Fichier propre. Cherche ailleurs.",
+      "Fausse piste.",
+      "Tu crois vraiment que ce serait aussi évident ?",
+      "Nan. Continue de chercher.",
+      "Haha. Non.",
+      "Propre. Trop propre.",
+      "Niet. Continue de chercher.",
+      "Cherche les noms bizarres.",
+      "Tu perds du temps. Ils arrivent.",
+      "Prends ton temps, je regarde tes fichiers secrets...",
+    ];
+
+    const DIR_REPLIES = [
+      "Intéressant... regarde là-dedans.",
+      "Peut-être quelque chose ici.",
+      "Continue de chercher.",
+      "Ce dossier... fouille-le.",
+      "Chaud, chaud...Froid",
+    ];
+
+    const CORRUPTED_FILES = {
+      "boucleprob.dhd": {
+        name: "boucleprob.dhd",
+        code: `// Corrigez la condition d'arrêt\n\nfunction compter(n) {\n  let i = 0;\n  while (i = n) {   // <- bug ici\n    console.log(i);\n    i++;\n  }\n}`,
+        reply: "La condition est cassée. Tu vois le bug ?",
+        solution: "Boucle corrigée. Buffer libéré.",
+        validate: c => c.includes("i < n") || c.includes("i<n"),
+      },
+      "c0r3dump.xvz": {
+        name: "c0r3dump.xvz",
+        code: `// Ajoutez le cas de base manquant\n\nfunction factorielle(n) {\n  // cas de base manquant !\n  return n * factorielle(n - 1);\n}`,
+        reply: "Stack overflow garanti. Cas de base manquant.",
+        solution: "Récursion stabilisée. Stack overflow évité.",
+        validate: c => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
+      },
+      "net_ghost.!!x": {
+        name: "net_ghost.!!x",
+        code: `// Corrigez la déclaration de variable\n\nfunction saluer(nom) {\n  message = "Accès autorisé, " + nom;\n  return message;\n}`,
+        reply: "Variable globale non déclarée. Fuite mémoire.",
+        solution: "Variable déclarée. Fuite colmatée.",
+        validate: c => /\b(let|const|var)\s+message/.test(c),
+      },
+      "sys_krnl.0x9f": {
+        name: "sys_krnl.0x9f",
+        code: `// Protégez contre la division par zéro\n\nfunction diviser(a, b) {\n  return a / b;\n}`,
+        reply: "Division par zéro possible. Protège ça.",
+        solution: "Division sécurisée. Noyau stabilisé.",
+        validate: c => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
+      },
+    };
+
+    const FILE_SYSTEM = [
+      {
+        type: "dir", name: "bin", children: [
+          { type: "file", name: "ls" },
+          { type: "file", name: "chmod" },
+          { type: "file", name: "c0r3dump.xvz", corrupted: true, fileId: "c0r3dump.xvz" },
+        ]
+      },
+      {
+        type: "dir", name: "etc", children: [
+          { type: "file", name: "hosts" },
+          { type: "file", name: "passwd" },
+          { type: "file", name: "net_ghost.!!x", corrupted: true, fileId: "net_ghost.!!x" },
+          {
+            type: "dir", name: "network", children: [
+              { type: "file", name: "interfaces" },
+              { type: "file", name: "resolv.conf" },
+            ]
+          },
+        ]
+      },
+      {
+        type: "dir", name: "lib", children: [
+          { type: "file", name: "libc.so" },
+          { type: "file", name: "libm.so" },
+          { type: "file", name: "sys_krnl.0x9f", corrupted: true, fileId: "sys_krnl.0x9f" },
+        ]
+      },
+      {
+        type: "dir", name: "home", children: [
+          {
+            type: "dir", name: "operator", children: [
+              { type: "file", name: ".bashrc" },
+              { type: "file", name: "boucleprob.dhd", corrupted: true, fileId: "boucleprob.dhd" },
+            ]
+          },
+        ]
+      },
+      {
+        type: "dir", name: "tmp", children: [
+          { type: "file", name: "session.lock" },
+          { type: "file", name: "cache" },
+        ]
+      },
+    ];
+
+    // ── DOM ─────────────────────────────────────────────────────────────
+    const hackerLine = document.getElementById("hacker-line");
+    const screenEl = document.getElementById("screen");
+    const hoverName = document.getElementById("hover-name");
+    const integrityEl = document.getElementById("integrity-bar");
+    const breadcrumb = document.getElementById("breadcrumb");
+    const crtScreen = document.querySelector(".crt-screen");
+
+    // ── STATE ───────────────────────────────────────────────────────────
+    let navStack = [];
+    let curNodes = FILE_SYSTEM;
+    let integrity = 90; // Modifié : démarre à 90%
+    let selectedIdx = 0;
+    let gameOver = false;
+    let _typTimer = null;
+    let sessionID = 0; // Ajouté : identifiant de session pour tuer les setTimeouts
+
+    // ── TYPING ──────────────────────────────────────────────────────────
+    const TYPING_SPEED = 50;
+
+    function typeText(text) {
+      if (_typTimer) clearTimeout(_typTimer);
+      hackerLine.innerHTML = "";
+      let i = 0;
+      const cursor = document.createElement("span");
+      cursor.className = "cursor";
+      (function tick() {
+        hackerLine.textContent = text.slice(0, i);
+        hackerLine.appendChild(cursor);
+        if (i++ < text.length) _typTimer = setTimeout(tick, TYPING_SPEED);
+      })();
+    }
+
+    // ── INTEGRITY ───────────────────────────────────────────────────────
+    function renderIntegrity() {
+      const BARS = 10;
+      const on = Math.round((integrity / 100) * BARS);
+      integrityEl.textContent = `INTÉGRITÉ [${"█".repeat(on)}${"░".repeat(BARS - on)}] ${integrity}%`;
+    }
+
+    function changeIntegrity(delta) {
+      integrity = Math.max(0, Math.min(100, integrity + delta));
+      renderIntegrity();
+      if (integrity <= 0) triggerGameOver();
+      if (integrity >= 100 && checkAllFixed()) triggerWin();
+    }
+
+    function checkAllFixed() {
+      const total = Object.keys(CORRUPTED_FILES).length;
+      return fixedCount() >= total;
+    }
+
+    function fixedCount() {
+      return Object.values(fixedFiles).filter(Boolean).length;
+    }
+
+    const fixedFiles = {};
+
+    // ── BREADCRUMB ──────────────────────────────────────────────────────
+    function buildPath() {
+      if (navStack.length === 0) return "/";
+      return "/" + navStack.map(s => s.dirName || "?").join("/") + "/";
+    }
+
+    //GLITCH
+    function glitch() {
+      const div = document.createElement("div");
+      div.style.position = "fixed";
+      div.style.top = 0;
+      div.style.left = 0;
+      div.style.width = "100%";
+      div.style.height = "100%";
+      div.style.pointerEvents = "none";
+      div.style.zIndex = 9999;
+      div.style.backdropFilter = "contrast(200%) saturate(300%) hue-rotate(90deg)";
+      document.body.appendChild(div);
+
+      const interval = setInterval(() => {
+        document.body.style.transform =
+          `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) skew(${Math.random() * 10 - 5}deg)`;
+
+        document.body.style.filter =
+          `hue-rotate(${Math.random() * 360}deg) contrast(${100 + Math.random() * 200}%)`;
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        document.body.style.transform = "";
+        document.body.style.filter = "";
+        div.remove();
+      }, 1200);
+    }
+
+    // ── RENDER LIST ─────────────────────────────────────────────────────
+    function renderList() {
+      screenEl.innerHTML = "";
+      selectedIdx = Math.min(selectedIdx, curNodes.length - 1 + (navStack.length > 0 ? 1 : 0));
+
+      breadcrumb.textContent = buildPath();
+      const ul = document.createElement("ul");
+      ul.id = "file-list";
+
+      curNodes.forEach((node, i) => {
+        const li = document.createElement("li");
+        const prefix = "> ";
+        const suffix = node.type === "dir" ? node.name + "/" : node.name;
+        li.textContent = prefix + suffix;
+        if (node.corrupted && !fixedFiles[node.fileId]) li.classList.add("corrupted");
+        if (i === selectedIdx) li.classList.add("selected");
+
+        li.addEventListener("mouseenter", () => {
+          hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
+          selectedIdx = i;
+          refreshSelected();
+          playHover(); // AUDIO
+        });
+        li.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
+        li.addEventListener("click", () => {
+          unlockAudio(); // AUDIO
+          activateNode(node, i)
+        });
+        ul.appendChild(li);
+      });
+
+      if (navStack.length > 0) {
+        const backIdx = curNodes.length;
+        const back = document.createElement("li");
+        back.textContent = "> ../";
+        back.className = "back";
+        if (selectedIdx === backIdx) back.classList.add("selected");
+        back.addEventListener("mouseenter", () => {
+          hoverName.textContent = "[ retour ]";
+          selectedIdx = backIdx;
+          refreshSelected();
+          playHover(); // AUDIO
+        });
+        back.addEventListener("mouseleave", () => { hoverName.textContent = ""; });
+        back.addEventListener("click", () => {
+          unlockAudio(); // AUDIO
+          goBack();
+        });
+        ul.appendChild(back);
+      }
+
+      screenEl.appendChild(ul);
+    }
+
+    function refreshSelected() {
+      const items = screenEl.querySelectorAll("#file-list li");
+      items.forEach((li, i) => {
+        li.classList.toggle("selected", i === selectedIdx);
+      });
+    }
+
+    function activateNode(node, idx) {
+      if (gameOver) return;
+
+      // GLITCH 1 : Inversion du nom du fichier
+      if (window.GLITCH_CONFIG.triggerReverse || Math.random() < window.GLITCH_CONFIG.reverseProb) {
+        window.GLITCH_CONFIG.triggerReverse = false;
+        node.name = node.name.split('').reverse().join('');
+        renderList();
+        playSound(sndBug); // <--- NOUVEAU SON ICI
+        typeText("ERREUR: Index de fichier corrompu...");
+        return;
+      }
+
+      // GLITCH 2 : Échange de position avec un autre fichier
+      if (window.GLITCH_CONFIG.triggerSwap || Math.random() < window.GLITCH_CONFIG.swapProb) {
+        window.GLITCH_CONFIG.triggerSwap = false;
+        if (curNodes.length > 1) {
+          let swapIdx = idx;
+          while (swapIdx === idx) swapIdx = Math.floor(Math.random() * curNodes.length);
+
+          let temp = curNodes[idx];
+          curNodes[idx] = curNodes[swapIdx];
+          curNodes[swapIdx] = temp;
+
+          renderList();
+          playSound(sndBug); // <--- NOUVEAU SON ICI
+          typeText("ERREUR: Décalage du secteur mémoire...");
+          return;
+        }
+      }
+
+      if (node.type === "dir") {
+        playSound(sndEnter);
+        navStack.push({ nodes: curNodes, dirName: node.name });
+        curNodes = node.children;
+        selectedIdx = 0;
+        renderList();
+        typeText(pick(DIR_REPLIES));
+      } else if (node.corrupted && !fixedFiles[node.fileId]) {
+        // --- SON BUZZ IMMÉDIAT ICI ---
+        sndBuzz.currentTime = 0;
+        sndBuzz.play().catch(() => { });
+
+        openEditor(node.fileId);
+      } else {
+        playSound(sndBad);
+        typeText(pick(CLEAN_REPLIES));
+      }
+    }
+
+    function goBack() {
+      if (navStack.length === 0) return;
+      playSound(sndEnter); // AUDIO
+      const prev = navStack.pop();
+      curNodes = prev.nodes;
+      selectedIdx = 0;
+      renderList();
+      typeText("...");
+    }
+
+    // ── KEYBOARD NAV ────────────────────────────────────────────────────
+    document.addEventListener("keydown", e => {
+      unlockAudio(); // AUDIO
+
+      if (gameOver) return;
+      if (!screenEl.querySelector("#file-list")) return;
+
+      const total = curNodes.length + (navStack.length > 0 ? 1 : 0);
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIdx = (selectedIdx + 1) % total;
+        refreshSelected();
+        scrollSelectedIntoView();
+        updateHoverFromSelected();
+        playNav(); // AUDIO
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIdx = (selectedIdx - 1 + total) % total;
+        refreshSelected();
+        scrollSelectedIntoView();
+        updateHoverFromSelected();
+        playNav(); // AUDIO
+      } else if (e.key === "Enter" || e.key === "ArrowRight") {
+        e.preventDefault();
+        if (selectedIdx < curNodes.length) {
+          activateNode(curNodes[selectedIdx], selectedIdx);
+        } else if (navStack.length > 0) {
+          goBack();
+        }
+      } else if (e.key === "ArrowLeft" || e.key === "Backspace") {
+        e.preventDefault();
+        goBack();
+      }
+    });
+
+    function scrollSelectedIntoView() {
+      const items = screenEl.querySelectorAll("#file-list li");
+      if (items[selectedIdx]) items[selectedIdx].scrollIntoView({ block: "nearest" });
+    }
+
+    function updateHoverFromSelected() {
+      if (selectedIdx < curNodes.length) {
+        const node = curNodes[selectedIdx];
+        hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
+      } else {
+        hoverName.textContent = "[ retour ]";
+      }
+    }
+
+    // ── EDITOR ──────────────────────────────────────────────────────────
+    function openEditor(fileId) {
+      glitch();
+      const file = CORRUPTED_FILES[fileId];
+      if (!file) return;
+      typeText(file.reply);
+      screenEl.innerHTML = "";
+      breadcrumb.textContent = buildPath() + file.name;
+
+      const view = document.createElement("div");
+      view.id = "editor-view";
+      const fname = document.createElement("div");
+      fname.id = "editor-filename";
+      fname.textContent = `⚠ ${file.name} — CORRECTION REQUISE`;
+
+      const ta = document.createElement("textarea");
+      ta.id = "code-editor";
+      ta.spellcheck = false;
+      ta.value = file.code;
+      ta.addEventListener("keydown", ev => {
+        unlockAudio(); // AUDIO
+        if (ev.key.length === 1 || ev.key === 'Backspace' || ev.key === 'Enter') {
+          playKey(); // AUDIO
+        }
+
+        if (ev.key === "Tab") {
+          ev.preventDefault();
+          playKey(); // AUDIO
+          const s = ta.selectionStart;
+          ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(ta.selectionEnd);
+          ta.selectionStart = ta.selectionEnd = s + 2;
+        }
+      });
+
+      const controls = document.createElement("div");
+      controls.id = "editor-controls";
+
+      const btnExec = mkBtn("[ EXÉCUTER ]");
+      const btnReset = mkBtn("[ RESET ]");
+      const btnBack = mkBtn("[ RETOUR ]");
+      const status = document.createElement("span");
+      status.id = "exec-status";
+
+      btnExec.addEventListener("click", () => {
+        unlockAudio();
+        if (file.validate(ta.value)) {
+          playSound(sndGood);
+          status.textContent = "✓ VALIDÉ";
+          status.className = "ok";
+          ta.disabled = true;
+          btnExec.disabled = true;
+          typeText(file.solution);
+          fixedFiles[fileId] = true;
+          changeIntegrity(+25);
+        } else {
+          // --- SON BUG IMMÉDIAT ---
+          sndBug.currentTime = 0; // Remet à zéro
+          sndBug.play().catch(() => { }); // Joue instantanément sans cloner
+
+          status.textContent = "✗ INVALIDE";
+          status.className = "err";
+          typeText("Mauvaise correction. Réessaie.");
+          changeIntegrity(-15);
+        }
+      });
+
+      btnReset.addEventListener("click", () => {
+        unlockAudio(); // AUDIO
+        playSound(sndEnter); // AUDIO
+        ta.disabled = false;
+        btnExec.disabled = false;
+        ta.value = file.code;
+        status.textContent = "";
+        status.className = "";
+      });
+
+      btnBack.addEventListener("click", () => {
+        unlockAudio(); // AUDIO
+        playSound(sndEnter); // AUDIO
+        breadcrumb.textContent = buildPath();
+        renderList();
+        typeText("...");
+      });
+
+      controls.append(btnExec, btnReset, btnBack, status);
+      view.append(fname, ta, controls);
+      screenEl.appendChild(view);
+    }
+
+    function mkBtn(label) {
+      const b = document.createElement("button");
+      b.className = "term-btn";
+      b.textContent = label;
+      b.addEventListener('mouseenter', playHover); // AUDIO
+      return b;
+    }
+
+    // ── GAME OVER ───────────────────────────────────────────────────────
+    function triggerGameOver() {
+      gameOver = true;
+      sndBackground.pause(); // <--- Coupe la musique pour l'ambiance dramatique
+      playSound(sndBad);
+      typeText("CORRUPTION TOTALE. AU REVOIR.");
+
+      const currentSession = sessionID; // Fix pour stopper la séquence en cas de reset
+
+      crtScreen.classList.add("glitching");
+
+      const allItems = screenEl.querySelectorAll("li, div, textarea");
+      let delay = 200;
+      allItems.forEach(el => {
+        setTimeout(() => {
+          if (sessionID !== currentSession) return;
+          el.classList.add("deleting");
+        }, delay);
+        delay += 120;
+      });
+
+      setTimeout(() => {
+        if (sessionID !== currentSession) return;
+        crtScreen.classList.remove("glitching");
+        screenEl.innerHTML = "";
+        breadcrumb.textContent = "";
+        integrityEl.textContent = "INTÉGRITÉ [░░░░░░░░░░] 0%";
+
+        const overlay = document.createElement("div");
+        overlay.id = "overlay-msg";
+
+        const bigMsg = document.createElement("div");
+        bigMsg.className = "big-msg";
+        bigMsg.textContent = "// SYSTÈME COMPROMIS //";
+
+        const speech = document.createElement("div");
+        speech.className = "hacker-speech";
+        speech.innerHTML = `
       rm -rf /* en cours...<br><br>
       Tu étais trop lent.<br>
       Tous tes fichiers appartiennent à GHOST_CORE maintenant.<br><br>
       <span style="opacity:0.5">[ Appuie sur POWER pour recommencer ]</span>
     `;
-                                const scanLine = document.createElement("div");
-                                scanLine.className = "scan-line";
-                                scanLine.style.top = "50%";
+        const scanLine = document.createElement("div");
+        scanLine.className = "scan-line";
+        scanLine.style.top = "50%";
 
-                                overlay.append(scanLine, bigMsg, speech);
-                                crtScreen.appendChild(overlay);
-                                hackerLine.textContent = "";
-                        }, delay + 300);
-                }
+        overlay.append(scanLine, bigMsg, speech);
+        crtScreen.appendChild(overlay);
+        hackerLine.textContent = "";
+      }, delay + 300);
+    }
 
-                // ── WIN ─────────────────────────────────────────────────────────────
-                function triggerWin() {
-                        gameOver = true;
-                        playSound(sndGood); // AUDIO
-                        typeText("NON... IMPOSSIBLE.");
-                        const currentSession = sessionID; // Fix session
+    // ── WIN ─────────────────────────────────────────────────────────────
+    function triggerWin() {
+      gameOver = true;
+      playSound(sndGood); // AUDIO
+      typeText("NON... IMPOSSIBLE.");
+      const currentSession = sessionID; // Fix session
 
-                        setTimeout(() => {
-                                if (sessionID !== currentSession) return;
-                                screenEl.innerHTML = "";
-                                breadcrumb.textContent = "/";
+      setTimeout(() => {
+        if (sessionID !== currentSession) return;
+        screenEl.innerHTML = "";
+        breadcrumb.textContent = "/";
 
-                                const overlay = document.createElement("div");
-                                overlay.id = "overlay-msg";
+        const overlay = document.createElement("div");
+        overlay.id = "overlay-msg";
 
-                                const bigMsg = document.createElement("div");
-                                bigMsg.className = "big-msg";
-                                bigMsg.textContent = "// VÉRIFICATION FINALE //";
+        const bigMsg = document.createElement("div");
+        bigMsg.className = "big-msg";
+        bigMsg.textContent = "// VÉRIFICATION FINALE //";
 
-                                const checks = document.createElement("div");
-                                checks.className = "hacker-speech";
-                                checks.style.textAlign = "left";
-                                const files = Object.keys(CORRUPTED_FILES);
-                                overlay.append(bigMsg, checks);
-                                crtScreen.appendChild(overlay);
+        const checks = document.createElement("div");
+        checks.className = "hacker-speech";
+        checks.style.textAlign = "left";
+        const files = Object.keys(CORRUPTED_FILES);
+        overlay.append(bigMsg, checks);
+        crtScreen.appendChild(overlay);
 
-                                let i = 0;
-                                function nextCheck() {
-                                        if (sessionID !== currentSession) return;
-                                        if (i < files.length) {
-                                                const line = document.createElement("div");
-                                                line.textContent = `> vérification ${files[i]}...`;
-                                                checks.appendChild(line);
-                                                setTimeout(() => {
-                                                        if (sessionID !== currentSession) return;
-                                                        line.textContent = `> ${files[i]} .............. [OK]`;
-                                                        line.style.color = "var(--fg-rgb)";
-                                                        i++;
-                                                        setTimeout(nextCheck, 400);
-                                                }, 500);
-                                        } else {
-                                                glitch();
-                                                setTimeout(() => {
-                                                        if (sessionID !== currentSession) return;
-                                                        bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
-                                                        const hackerSpeech = document.createElement("div");
-                                                        hackerSpeech.className = "hacker-speech";
-                                                        hackerSpeech.style.marginTop = "16px";
-                                                        hackerSpeech.innerHTML = `
+        let i = 0;
+        function nextCheck() {
+          if (sessionID !== currentSession) return;
+          if (i < files.length) {
+            const line = document.createElement("div");
+            line.textContent = `> vérification ${files[i]}...`;
+            checks.appendChild(line);
+            setTimeout(() => {
+              if (sessionID !== currentSession) return;
+              line.textContent = `> ${files[i]} .............. [OK]`;
+              line.style.color = "var(--fg-rgb)";
+              i++;
+              setTimeout(nextCheck, 400);
+            }, 500);
+          } else {
+            glitch();
+            setTimeout(() => {
+              if (sessionID !== currentSession) return;
+              bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
+              const hackerSpeech = document.createElement("div");
+              hackerSpeech.className = "hacker-speech";
+              hackerSpeech.style.marginTop = "16px";
+              hackerSpeech.innerHTML = `
             Bien joué... cette fois.<br>
             Tu as réparé tout ce que j'ai cassé.<br>
             Mais je reviendrai.<br><br>
             <span style="opacity:0.5">GHOST_CORE — connexion interrompue</span>
           `;
-                                                        overlay.appendChild(hackerSpeech);
-                                                        hackerLine.textContent = "";
+              overlay.appendChild(hackerSpeech);
+              hackerLine.textContent = "";
 
-                                                        // Reboot forcé à la fin de la victoire
-                                                        setTimeout(() => {
-                                                                if (sessionID !== currentSession) return;
-                                                                triggerReboot();
-                                                        }, 3000);
-                                                }, 600);
-                                        }
-                                }
-                                nextCheck();
-                        }, 800);
-                }
+              // Reboot forcé à la fin de la victoire
+              setTimeout(() => {
+                if (sessionID !== currentSession) return;
+                triggerReboot();
+              }, 3000);
+            }, 600);
+          }
+        }
+        nextCheck();
+      }, 800);
+    }
 
-                // ── REBOOT ──────────────────────────────────────────────────────────
-                function triggerReboot() {
-                        if (document.getElementById("reboot-screen")) return;
-                        sessionID++;
-                        const currentSession = sessionID;
+    // ── REBOOT ──────────────────────────────────────────────────────────
+    function triggerReboot() {
+      if (document.getElementById("reboot-screen")) return;
+      sessionID++;
+      const currentSession = sessionID;
 
-                        sndBackground.pause();
+      sndBackground.pause();
 
-                        const ol = document.getElementById("overlay-msg");
-                        if (ol) ol.remove();
+      const ol = document.getElementById("overlay-msg");
+      if (ol) ol.remove();
 
-                        const rb = document.createElement("div");
-                        rb.id = "reboot-screen";
-                        const title = document.createElement("div");
-                        title.className = "rb-title";
-                        title.textContent = "ROBCO INDUSTRIES";
+      const rb = document.createElement("div");
+      rb.id = "reboot-screen";
+      const title = document.createElement("div");
+      title.className = "rb-title";
+      title.textContent = "ROBCO INDUSTRIES";
 
-                        const line1 = document.createElement("div");
-                        line1.className = "rb-line";
-                        line1.textContent = "REBOOTING TERMLINK...";
+      const line1 = document.createElement("div");
+      line1.className = "rb-line";
+      line1.textContent = "REBOOTING TERMLINK...";
 
-                        const line2 = document.createElement("div");
-                        line2.className = "rb-line";
-                        line2.style.animationDelay = "0.4s";
-                        line2.textContent = "CLEARING MEMORY BANKS...";
+      const line2 = document.createElement("div");
+      line2.className = "rb-line";
+      line2.style.animationDelay = "0.4s";
+      line2.textContent = "CLEARING MEMORY BANKS...";
 
-                        const line3 = document.createElement("div");
-                        line3.className = "rb-line";
-                        line3.style.animationDelay = "0.8s";
-                        line3.textContent = "REINITIALIZING...";
+      const line3 = document.createElement("div");
+      line3.className = "rb-line";
+      line3.style.animationDelay = "0.8s";
+      line3.textContent = "REINITIALIZING...";
 
-                        rb.append(title, line1, line2, line3);
-                        crtScreen.appendChild(rb);
+      rb.append(title, line1, line2, line3);
+      crtScreen.appendChild(rb);
 
-                        setTimeout(() => {
-                                if (sessionID !== currentSession) return;
-                                rb.remove();
-                                resetGame();
-                        }, 2500);
-                }
+      setTimeout(() => {
+        if (sessionID !== currentSession) return;
+        rb.remove();
+        resetGame();
+      }, 2500);
+    }
 
-                // ── RESET ───────────────────────────────────────────────────────────
-                function resetGame() {
-                        sessionID++;
-                        playSound(sndPowerOn);
+    // ── RESET ───────────────────────────────────────────────────────────
+    function resetGame() {
+      sessionID++;
+      playSound(sndPowerOn);
 
-                        // <--- Relance la musique au démarrage
-                        if (audioUnlocked) sndBackground.play().catch(() => { });
+      // <--- Relance la musique au démarrage
+      if (audioUnlocked) sndBackground.play().catch(() => { });
 
-                        // Nettoyage de l'UI
-                        crtScreen.classList.remove("glitching");
-                        const ol = document.getElementById("overlay-msg");
-                        if (ol) ol.remove();
-                        const deletingItems = screenEl.querySelectorAll(".deleting");
-                        deletingItems.forEach(el => el.classList.remove("deleting"));
+      // Nettoyage de l'UI
+      crtScreen.classList.remove("glitching");
+      const ol = document.getElementById("overlay-msg");
+      if (ol) ol.remove();
+      const deletingItems = screenEl.querySelectorAll(".deleting");
+      deletingItems.forEach(el => el.classList.remove("deleting"));
 
-                        navStack = [];
-                        curNodes = FILE_SYSTEM;
-                        integrity = 11; // L'intégrité repart de 11%
-                        selectedIdx = 0;
-                        gameOver = false;
-                        for (const k in fixedFiles) delete fixedFiles[k];
+      navStack = [];
+      curNodes = FILE_SYSTEM;
+      integrity = 11; // L'intégrité repart de 11%
+      selectedIdx = 0;
+      gameOver = false;
+      for (const k in fixedFiles) delete fixedFiles[k];
 
-                        renderIntegrity();
-                        renderList();
-                        typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
-                }
+      renderIntegrity();
+      renderList();
+      typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
+    }
 
-                // ── POWER BUTTON ────────────────────────────────────────────────────
-                document.getElementById("power-btn").addEventListener("click", () => {
-                        unlockAudio(); // AUDIO
-                        playSound(sndPowerOff); // AUDIO
-                        triggerReboot();
-                });
+    // ── POWER BUTTON ────────────────────────────────────────────────────
+    document.getElementById("power-btn").addEventListener("click", () => {
+      unlockAudio(); // AUDIO
+      playSound(sndPowerOff); // AUDIO
+      triggerReboot();
+    });
 
-                // ── UTILS ───────────────────────────────────────────────────────────
-                function pick(arr) {
-                        return arr[Math.floor(Math.random() * arr.length)];
-                }
+    // ── UTILS ───────────────────────────────────────────────────────────
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-                // ── INIT ────────────────────────────────────────────────────────────
-                renderIntegrity();
-                renderList();
-                typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
-        </script>
+    // ── INIT ────────────────────────────────────────────────────────────
+    renderIntegrity();
+    renderList();
+    typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
+  </script>
 </body>
 
 </html>
