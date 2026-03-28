@@ -1,76 +1,114 @@
+/* ========================================== */
+/* 1. POLICES (Google Fonts)                  */
+/* ========================================== */
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Share+Tech+Mono&display=swap");
 
+/* ========================================== */
+/* 2. VARIABLES GLOBALES (Couleurs unifiées)  */
+/* ========================================== */
 :root {
+  /* Couleurs du boîtier physique 3D */
+  --casing-color: #2a2c20;
+  --casing-shadow: #14150f;
+  
+  /* Palette de couleurs de la librairie Fallout */
   --fg-pb-green: 26, 255, 128;
-  --fg-pb-blue: 46, 207, 255;
-  --fg-pb-amber: 255, 182, 66;
-  --fg-pb-white: 192, 255, 255;
-
+  
+  /* Couleur active (Vert par défaut) */
   --fo-fg: var(--fg-pb-green);
   --fo-bg: var(--fg-pb-green), 0.25;
+
+  /* Reflets et lueurs de l'écran CRT */
+  --screen-glow: rgba(26, 255, 128, 0.15);
+  --screen-glare: rgba(200, 255, 200, 0.08);
 }
 
-.fo-blue {
-  --fo-fg: var(--fg-pb-blue);
-  --fo-bg: var(--fg-pb-blue), 0.25;
+/* ========================================== */
+/* 3. STRUCTURE DE LA PAGE ET DU BOÎTIER 3D   */
+/* ========================================== */
+body {
+  background-color: #050505;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: sans-serif;
+  overflow: hidden; /* Empêche la page entière de scroller */
 }
 
-.fo-amber {
-  --fo-fg: var(--fg-pb-amber);
-  --fo-bg: var(--fg-pb-amber), 0.25;
+.monitor-casing {
+  background: linear-gradient(135deg, #3a3d2d, var(--casing-color));
+  width: 900px;
+  height: 650px;
+  border-radius: 60px;
+  box-shadow: 
+      inset -10px -10px 20px rgba(0,0,0,0.8),
+      inset 10px 10px 20px rgba(255,255,255,0.05),
+      0 20px 50px rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 30px 10px 30px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.fo-white {
-  --fo-fg: var(--fg-pb-white);
-  --fo-bg: var(--fg-pb-white), 0.25;
+.screen-bezel {
+  background-color: #0a0a0a;
+  width: 100%;
+  flex-grow: 1;
+  border-radius: 40px;
+  box-shadow: 
+      inset 0px 0px 30px #000,
+      0 3px 0 rgba(255,255,255,0.02);
+  padding: 25px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.fo-ui {
-  font-family: "Roboto", sans-serif, system-ui;
+/* ========================================== */
+/* 4. L'ÉCRAN CRT (Lueurs, Scanlines)         */
+/* ========================================== */
+.crt-screen {
+  background-color: #000;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+      inset 0 0 60px rgba(0,0,0,1),
+      0 0 20px var(--screen-glow);
 }
 
-.fo-terminal {
-  font-family: "Share Tech Mono", monospace, system-ui;
+.glare {
+  position: absolute;
+  top: -10%; right: -10%; width: 60%; height: 120%;
+  background: radial-gradient(ellipse at center, var(--screen-glare) 0%, transparent 70%);
+  transform: rotate(15deg);
+  pointer-events: none;
+  filter: blur(15px);
+  z-index: 50;
 }
 
-.fo-selection *::selection {
-  background-color: rgb(var(--fo-fg));
-  color: black;
+.scanlines {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 2px, transparent 2px, transparent 4px);
+  pointer-events: none;
+  z-index: 10;
 }
 
-.fg-pb {
-  color: rgb(var(--fo-fg));
-}
-
-.fo-link {
-  text-decoration-line: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 4px;
-}
-
-.bg-pb {
-  background-color: rgba(var(--fo-bg));
-}
-
-.fo-glow {
-  text-shadow:
-    0 0 0.25rem rgb(var(--fo-fg)),
-    0 0 1rem rgb(var(--fo-fg));
-}
-
-.fo-shadow {
-  box-shadow:
-    0 0 0.25rem rgba(var(--fo-bg)),
-    0 0 1rem rgba(var(--fo-bg));
+.vignette {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%);
+  pointer-events: none;
+  z-index: 5;
 }
 
 @keyframes crtAnimation {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 10000%;
-  }
+  0% { background-position: 0 0; }
+  100% { background-position: 0 10000%; }
 }
 
 .bg-terminal {
@@ -82,230 +120,103 @@
 }
 
 .bg-terminal::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  user-select: none; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+}
+
+/* ========================================== */
+/* 5. TEXTE ET EFFETS DU JEU (Hacking)        */
+/* ========================================== */
+.fo-ui { font-family: "Roboto", sans-serif, system-ui; }
+.fo-terminal { font-family: "Share Tech Mono", monospace, system-ui; }
+
+.fo-selection *::selection { background-color: rgb(var(--fo-fg)); color: black; }
+.fg-pb { color: rgb(var(--fo-fg)); }
+.bg-pb { background-color: rgba(var(--fo-bg)); }
+
+.terminal-inner-ui {
+  font-family: "Share Tech Mono", monospace;
+  color: rgb(var(--fo-fg));
   width: 100%;
   height: 100%;
-  user-select: none;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 2px
-  );
+  padding: 25px;
+  box-sizing: border-box;
+  text-shadow: 0 0 4px rgb(var(--fo-fg)), 0 0 10px rgba(var(--fo-fg), 0.5);
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: 1px;
 }
 
-.fo-progress {
-  background-color: transparent;
-  border: 2px solid rgb(var(--fo-fg));
-  border-radius: 0;
-  height: 1rem;
-
-  &::-webkit-progress-bar {
-    background-color: transparent;
-  }
-  &::-webkit-progress-value {
-    background-color: rgb(var(--fo-fg));
-    border-radius: 0;
-  }
-  &::-moz-progress-bar {
-    background-color: rgb(var(--fo-fg));
-    border-radius: 0;
-  }
-  &:indeterminate::-moz-progress-bar {
-    background-color: transparent;
-  }
+/* Évite que les lignes de code se cassent et maintient l'espacement */
+.hack-row {
+  white-space: pre;
+  line-height: 1.15;
 }
 
-.fo-tabs {
-  display: grid;
-  align-items: flex-start;
-  position: relative;
-  padding: 0 2rem;
+/* Bloque la hauteur des logs pour ne pas faire déborder l'écran vers le bas */
+#action-logs {
+  height: 150px; 
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; 
 }
 
-.fo-tabs::before {
-  content: "";
-  position: absolute;
-  border-top: 2px solid rgb(var(--fo-fg));
-  border-left: 2px solid rgb(var(--fo-fg));
-  width: 2rem;
-  height: 8px;
-  bottom: -6px;
-  left: 0;
-}
-
-.fo-tabs::after {
-  content: "";
-  position: absolute;
-  border-top: 2px solid rgb(var(--fo-fg));
-  border-right: 2px solid rgb(var(--fo-fg));
-  width: 2rem;
-  height: 8px;
-  bottom: -6px;
-  right: 0;
-}
-
-.fo-tab {
-  position: relative;
-  grid-row-start: 1;
-  display: inline-flex;
-  font-weight: 700;
-  text-transform: uppercase;
-  height: 2rem;
-  font-size: 1.25rem;
-  line-height: 2.25rem;
-  cursor: pointer;
-  user-select: none;
-  appearance: none;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: rgb(var(--fo-fg));
-  border-color: rgb(var(--fo-fg));
-  border-bottom-width: 2px;
-}
-
-.fo-tab-active {
-  border-bottom-width: 0;
-}
-
-.fo-tab-active::before {
-  content: "";
-  position: absolute;
-  border-top: 2px solid rgb(var(--fo-fg));
-  border-left: 2px solid rgb(var(--fo-fg));
-  width: 8px;
-  height: 60%;
-  bottom: 0;
-  left: 0;
-}
-
-.fo-tab-active::after {
-  content: "";
-  position: absolute;
-  border-top: 2px solid rgb(var(--fo-fg));
-  border-right: 2px solid rgb(var(--fo-fg));
-  width: 8px;
-  height: 60%;
-  bottom: 0;
-  right: 0;
-}
-
-.fo-btn {
-  display: inline-flex;
-  cursor: pointer;
-  text-transform: uppercase;
-  user-select: none;
-  appearance: none;
-  cursor: pointer;
-  font-weight: 700;
+/* Carrés de tentatives restantes */
+.attempt-block {
+  display: inline-block;
+  width: 14px;
+  height: 18px;
   background-color: rgb(var(--fo-fg));
-  padding: 0.25rem;
-  transition: background-color 0.1s;
+  margin-right: 8px;
+  box-shadow: 0 0 8px rgb(var(--fo-fg));
+  vertical-align: middle;
 }
 
-.fo-btn:hover {
-  background-color: rgb(var(--fo-fg), 0.75);
-}
+.hex-code { margin-right: 10px; }
+.hack-char { display: inline-block; color: rgb(var(--fo-fg)); }
 
-.fo-list > li {
-  position: relative;
-  padding-left: 1rem;
-}
-
-.fo-list > li:before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  background-color: rgb(var(--fo-fg));
-}
-
-.fo-input[type="text"],
-textarea.fo-input {
-  background-color: rgb(var(--fo-bg));
-  color: rgb(var(--fo-fg));
-  padding: 0 0.25rem;
-  outline: none;
-}
-
-.fo-input[type="text"]::placeholder,
-textarea.fo-input::placeholder {
-  color: rgb(var(--fo-fg), 0.625);
-}
-
-.fo-select {
-  background-color: rgb(var(--fo-bg));
-  color: rgb(var(--fo-fg));
-  padding: 0.125rem;
-  outline: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.fo-select optgroup {
-  color: initial;
-}
-
-.fo-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  outline: none;
+/* Effet des mots piratables */
+.hack-word {
+  display: inline-block;
   cursor: pointer;
-  background: transparent;
+  transition: background-color 0.05s, color 0.05s; 
 }
 
-.fo-input[type="range"]::-webkit-slider-runnable-track {
-  -webkit-appearance: none;
-  box-shadow: none;
-  border: none;
-  background: rgb(var(--fo-bg));
+/* Surlignage inversé quand le mot est sélectionné */
+.hack-word.active, 
+.hack-word:hover {
+  background-color: rgb(var(--fo-fg));
+  color: #050505;
+  text-shadow: none; 
+  box-shadow: 0 0 10px rgb(var(--fo-fg)); 
 }
 
-.fo-input[type="range"]::-moz-range-track {
-  -webkit-appearance: none;
-  box-shadow: none;
-  border: none;
-  height: 1.5rem;
-  background: rgb(var(--fo-bg));
+/* Curseur clignotant */
+.cursor-block {
+  display: inline-block;
+  width: 12px;
+  height: 18px;
+  background-color: rgb(var(--fo-fg));
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  box-shadow: 0 0 8px rgb(var(--fo-fg));
 }
 
-.fo-input[type="range"]::-ms-track {
-  -webkit-appearance: none;
-  box-shadow: none;
-  border: none;
-  background: rgb(var(--fo-bg));
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-.fo-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  background-image: linear-gradient(
-    to top,
-    rgb(var(--fo-fg)),
-    rgb(var(--fo-bg))
-  );
-  margin: 0.125rem;
-  height: 1.25rem;
-  width: 0.5rem;
-}
-
-.fo-input[type="range"]::-moz-range-thumb {
-  border: none;
-  border-radius: 0;
-  background-image: linear-gradient(
-    to top,
-    rgb(var(--fo-fg)),
-    rgb(var(--fo-bg))
-  );
-  height: 1.25rem;
-  width: 0.5rem;
-}
+/* ========================================== */
+/* 6. PANNEAU DU BAS (Bouton Power)           */
+/* ========================================== */
+.bottom-panel { width: 80%; height: 60px; background: linear-gradient(to bottom, #4a4d3a, #2a2c20); margin-top: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-shadow: inset 0 2px 5px rgba(255,255,255,0.05), inset 0 -5px 10px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
+.screw { width: 14px; height: 14px; background-color: #111; border-radius: 50%; border: 1px solid #3d2a15; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.8), 0px 1px 1px rgba(255,255,255,0.2); position: relative; }
+.screw::after { content: ''; position: absolute; top: 50%; left: 20%; width: 60%; height: 2px; background-color: #333; transform: translateY(-50%) rotate(45deg); }
+.vents { width: 200px; height: 20px; background: repeating-linear-gradient(90deg, #111, #111 4px, transparent 4px, transparent 12px); border: 1px solid #3d2a15; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); border-radius: 2px; }
+.power-button-container { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.power-button { width: 25px; height: 25px; background: linear-gradient(135deg, #cc2200, #880000); border-radius: 4px; border: 2px solid #080808; box-shadow: 0 0 10px rgba(200, 30, 0, 0.4), inset 2px 2px 5px rgba(255,255,255,0.2); cursor: pointer; outline: none; transition: all 0.1s ease; -webkit-appearance: none; }
+.power-button:active { transform: translateY(2px); }
+.power-text { font-size: 8px; color: #666; letter-spacing: 1px; text-transform: uppercase; font-family: 'Courier New', monospace; }
