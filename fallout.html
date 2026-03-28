@@ -647,6 +647,9 @@
 
 <body>
 
+  <div>
+    <img src="background.jpg">
+  </div>
   <div class="monitor-casing">
     <div class="screen-bezel">
       <div class="crt-screen bg-terminal">
@@ -746,25 +749,72 @@
 
     const CLEAN_REPLIES = [
       "Non, pas là...",
-      "Rien d'intéressant ici.",
-      "Fichier propre. Cherche ailleurs.",
+      "Rien ici.",
+      "Fichier propre.",
       "Fausse piste.",
-      "Tu crois vraiment que ce serait aussi évident ?",
-      "Nan. Continue de chercher.",
+      "Trop évident.",
+      "Nan. Cherche encore.",
       "Haha. Non.",
       "Propre. Trop propre.",
-      "Niet. Continue de chercher.",
-      "Cherche les noms bizarres.",
-      "Tu perds du temps. Ils arrivent.",
-      "Prends ton temps, je regarde tes fichiers secrets...",
+      "Niet. Continue.",
+      "Noms bizarres uniquement.",
+      "Perte de temps.",
+      "Je te regarde...",
+      "Vide.",
+      "Erreur 404 talent.",
+      "Essaye encore, débutant.",
+      "Même pas drôle.",
+      "Rien d'utile.",
+      "Passe ton tour.",
+      "Mauvaise pioche.",
+      "0 octet d'intérêt.",
+      "Circulez.",
+      "Pas ce soir.",
+      "T'es loin du but.",
+      "C'est tout ?",
+      "Fichier système sain.",
+      "Rien à voir.",
+      "Perdu ?",
+      "Refroidissement...",
+      "Toujours rien.",
+      "Essaye l'autre.",
+      "Coup pour rien.",
+      "Pas de chance."
     ];
 
     const DIR_REPLIES = [
-      "Intéressant... regarde là-dedans.",
-      "Peut-être quelque chose ici.",
+      "Intéressant... regarde là.",
+      "Peut-être ici.",
       "Continue de chercher.",
       "Ce dossier... fouille-le.",
-      "Chaud, chaud...Froid",
+      "Chaud, chaud... Froid.",
+      "Ouvre. Pour voir.",
+      "C'est profond, non ?",
+      "Tu t'enfonces.",
+      "La suite est là.",
+      "Regarde derrière toi.",
+      "Vide. Ou pas.",
+      "Curieux, n'est-ce pas ?",
+      "Encore un étage.",
+      "Tu brûles.",
+      "Fouille encore.",
+      "Rien... pour l'instant.",
+      "C'est un labyrinthe.",
+      "Perdu dans les dossiers ?",
+      "Regarde plus bas.",
+      "C'est par ici.",
+      "Tu touches au but.",
+      "C'est sombre là-dedans.",
+      "Mauvais chemin.",
+      "Fais demi-tour.",
+      "Tout au fond.",
+      "Cache-cache.",
+      "Tu as peur ?",
+      "Rien de spécial.",
+      "Cherche le détail.",
+      "Encore un effort.",
+      "C'est verrouillé ?",
+      "Pas par là."
     ];
 
     const CORRUPTED_FILES = {
@@ -1385,7 +1435,7 @@
 
       navStack = [];
       curNodes = FILE_SYSTEM;
-      integrity = 11; // L'intégrité repart de 11%
+      integrity = 80; // L'intégrité repart de 80%
       selectedIdx = 0;
       gameOver = false;
       for (const k in fixedFiles) delete fixedFiles[k];
