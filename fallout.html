@@ -831,6 +831,35 @@
       return "/" + navStack.map(s => s.dirName || "?").join("/") + "/";
     }
 
+    //GLITCH
+    function glitch() {
+      const div = document.createElement("div");
+      div.style.position = "fixed";
+      div.style.top = 0;
+      div.style.left = 0;
+      div.style.width = "100%";
+      div.style.height = "100%";
+      div.style.pointerEvents = "none";
+      div.style.zIndex = 9999;
+      div.style.backdropFilter = "contrast(200%) saturate(300%) hue-rotate(90deg)";
+      document.body.appendChild(div);
+
+      const interval = setInterval(() => {
+        document.body.style.transform =
+          `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) skew(${Math.random() * 10 - 5}deg)`;
+
+        document.body.style.filter =
+          `hue-rotate(${Math.random() * 360}deg) contrast(${100 + Math.random() * 200}%)`;
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        document.body.style.transform = "";
+        document.body.style.filter = "";
+        div.remove();
+      }, 1000);
+    }
+
     // ── RENDER LIST ─────────────────────────────────────────────────────
     function renderList() {
       screenEl.innerHTML = "";
@@ -983,6 +1012,7 @@
 
     // ── EDITOR ──────────────────────────────────────────────────────────
     function openEditor(fileId) {
+      glitch();
       const file = CORRUPTED_FILES[fileId];
       if (!file) return;
       typeText(file.reply);
@@ -1151,6 +1181,7 @@
               setTimeout(nextCheck, 400);
             }, 500);
           } else {
+            glitch();
             setTimeout(() => {
               if (sessionID !== currentSession) return;
               bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
@@ -1180,6 +1211,7 @@
 
     // ── REBOOT ──────────────────────────────────────────────────────────
     function triggerReboot() {
+      glitch();
       if (document.getElementById("reboot-screen")) return; // Anti-spam bouton
       sessionID++; // Invalide instantanément tout processus en cours
       const currentSession = sessionID;
