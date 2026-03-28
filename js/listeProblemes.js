@@ -16,7 +16,7 @@ const problemes = [
   },
   
   {
-    nom: "scopeVarLet.js",
+    nom: "probleme@scope$.js",
     code: `if(true) {
             let message = "Salut";
           }
@@ -27,8 +27,8 @@ const problemes = [
       const avantIf = code.split("if")[0];
       return avantIf.includes("let message") || avantIf.includes("var message");
     },
-    solutionIdeale: ["let message;", "message = \"Salut\";"],
-  }
+    solutionIdeale: ["Déclare la variable 'message' avant le bloc if."],
+  },
 
 ];
   
