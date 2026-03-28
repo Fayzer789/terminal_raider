@@ -1,21 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <link rel="stylesheet" href="fallout.css">
-    </link>;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fallout.css by zAlweNy26</title>
+    <link rel="icon" href="./fallout-boy.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./css/fallout.css" />
 </head>
 
-<body>
-    <div id="terminal">
-        <div id="output"></div>
-        <div id="input-line">
-            <span>> </span>
-            <input id="input" autofocus />
+<body class="bg-stone-800 fo-selection fo-ui">
+    <div class="bg-black bg-terminal fo-terminal text-2xl p-4 flex flex-col gap-2 fg-pb fo-glow">
+        <p>Welcome to ROBCO Industries (TM) Termlink</p>
+        <p>Password Required</p>
+        <p>Attempts Remaining: ■ ■ ■ ■</p>
+        <div class="flex gap-4 items-end">
+            <div class="grid grid-cols-2 gap-x-4">
+                <p>
+                    <span>> bin</span>
+                </p>
+                <p>
+                    <span>> usr</span>
+                </p>
+                <p>
+                    <span>> var</span>
+                </p>
+                <p>
+                    <span>> sys</span>
+                </p>
+            </div>
         </div>
     </div>
-
-    <script src="script.js"></script>
+    <script>
+        const tabs = document.querySelectorAll('.fo-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('fo-tab-active'));
+                tab.classList.add('fo-tab-active');
+            });
+        });
+    </script>
 </body>
 
 </html>
