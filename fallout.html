@@ -642,13 +642,23 @@
       text-shadow: 0 0 20px var(--fg-rgb);
       animation: none;
     }
+
+    img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
   </style>
 </head>
 
 <body>
 
   <div>
-    <img src="background.jpg">
+    <img src="./images/background.png">
   </div>
   <div class="monitor-casing">
     <div class="screen-bezel">
