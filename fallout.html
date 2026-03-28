@@ -33,6 +33,34 @@
       font-family: 'Share Tech Mono', monospace;
     }
 
+    /* ── ÉCRAN DE DÉMARRAGE ── */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 150;
+      text-align: center;
+    }
+
+    .start-title {
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: rgb(26, 255, 128);
+      text-shadow: 0 0 20px rgb(26, 255, 128);
+    }
+
+    .start-sub {
+      margin-top: 20px;
+      font-size: 20px;
+      opacity: 0.6;
+      color: rgb(26, 255, 128);
+      text-shadow: 0 0 20px rgb(26, 255, 128);
+    }
+
     /* ── BOÎTIER ── */
     .monitor-casing {
       background: linear-gradient(135deg, #3a3d2d, var(--casing));
@@ -622,6 +650,10 @@
   <div class="monitor-casing">
     <div class="screen-bezel">
       <div class="crt-screen bg-terminal">
+        <div id="start-screen"> //start screen
+          <div class="start-title">ROBCO INDUSTRIES</div>
+          <div class="start-sub">Appuyez sur POWER pour démarrer</div>
+        </div>
         <div class="glare"></div>
         <div class="scanlines"></div>
         <div class="vignette"></div>
@@ -680,11 +712,13 @@
     sndBuzz.volume = 0.5; // Ajuste le volume si besoin
 
     function unlockAudio() {
-      if (!audioUnlocked) {
-        audioUnlocked = true;
-        sndBackground.play().catch(() => { }); // Lance le fond sonore
-      }
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+
+      sndBackground.currentTime = 0;
+      sndBackground.play().catch(() => { });
     }
+
     function playSound(a) { if (!audioUnlocked) return; a.cloneNode(true).play().catch(() => { }); }
     function playKey() { playSound(keySounds[Math.floor(Math.random() * keySounds.length)]); }
     function playNav() {
@@ -698,8 +732,6 @@
       s.volume = 0.2; s.play().catch(() => { });
     }
 
-    document.addEventListener('click', unlockAudio, { once: true });
-    document.addEventListener('keydown', unlockAudio, { once: true });
     // ── CONFIG ─────────────────────────────────────────────────────────────
 
     // EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
@@ -1364,9 +1396,26 @@
     }
 
     // ── POWER BUTTON ────────────────────────────────────────────────────
+    let started = false;
+    function init() {
+      document.getElementById("start-screen").remove();
+      resetGame();
+    }
     document.getElementById("power-btn").addEventListener("click", () => {
-      unlockAudio(); // AUDIO
-      playSound(sndPowerOff); // AUDIO
+      unlockAudio();
+
+      if (!started) {
+        started = true;
+
+        document.getElementById("start-screen").remove();
+
+        playSound(sndPowerOn);
+
+        resetGame(); // démarre le jeu
+        return;
+      }
+
+      playSound(sndPowerOff);
       triggerReboot();
     });
 
