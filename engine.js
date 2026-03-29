@@ -18,7 +18,6 @@ const sndBad = new Audio(`${SP}passbad.ogg`);
 const sndGood = new Audio(`${SP}passgood.ogg`);
 const sndPowerOn = new Audio(`${SP}poweron.ogg`);
 const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
-
 const sndBackground = new Audio(`${SP}background_sound.mp3`);
 sndBackground.loop = true;
 sndBackground.volume = 0.8;
@@ -63,6 +62,12 @@ function playHover() {
 }
 
 // ── DOM ─────────────────────────────────────────────────────────────
+/*document.addEventListener("mousemove", (e) => {
+  const x = (e.clientX / window.innerWidth) * 100;
+  const y = (e.clientY / window.innerHeight) * 100;
+  document.title = `X: ${x.toFixed(2)}% Y: ${y.toFixed(2)}%`;
+});
+*/
 const hackerLine = document.getElementById("hacker-line");
 const screenEl = document.getElementById("screen");
 const hoverName = document.getElementById("hover-name");
@@ -341,13 +346,12 @@ function openEditor(fileId) {
   if (!file) return;
   typeText(file.reply);
   screenEl.innerHTML = "";
-  breadcrumb.textContent = buildPath() + file.name;
+  breadcrumb.textContent = buildPath() + file.name + " — CORRECTION REQUISE";
 
   const view = document.createElement("div");
   view.id = "editor-view";
   const fname = document.createElement("div");
   fname.id = "editor-filename";
-  fname.textContent = `⚠ ${file.name} — CORRECTION REQUISE`;
 
   const ta = document.createElement("textarea");
   ta.id = "code-editor";
@@ -396,7 +400,7 @@ function openEditor(fileId) {
       status.textContent = "✗ INVALIDE";
       status.className = "err";
       typeText("Mauvaise correction. Réessaie.");
-      changeIntegrity(-15);
+      changeIntegrity(-50);
     }
   });
 
@@ -433,7 +437,11 @@ function mkBtn(label) {
 
 // ── HACKER INTRO SEQUENCE ──────────────────────────────────────────
 function triggerHackerIntro() {
-  // Nettoie l'écran actuel
+  // 1. Cacher les éléments UI et bloquer la souris
+  hackerLine.style.display = "none";
+  breadcrumb.style.display = "none";
+  screenEl.style.pointerEvents = "none"; // Désactive les clics/survols
+
   screenEl.innerHTML = "";
   breadcrumb.textContent = "";
 
@@ -441,7 +449,7 @@ function triggerHackerIntro() {
   introOverlay.id = "overlay-msg";
 
   const bigMsg = document.createElement("div");
-  bigMsg.className = "big-msg";
+  bigMsg.className = "big-msg red-alert"; // <-- 2. Utilise la couleur ROUGE
   bigMsg.textContent = "// INTRUSION GHOST_CORE //";
 
   const speech = document.createElement("div");
@@ -459,30 +467,37 @@ function triggerHackerIntro() {
   let step = 0;
   function nextDialogue() {
     if (step < dialogues.length) {
-      glitch(); // Animation de l'écran
-      playSound(sndBug); // Bruit d'erreur
+      glitch();
+      playSound(sndBug);
       speech.innerHTML += `<br>> ${dialogues[step]}`;
 
-      // Baisse l'intégrité manuellement (-26 à chaque phrase)
       integrity -= 26;
       renderIntegrity();
 
       step++;
-      setTimeout(nextDialogue, 2500); // 2.5 secondes entre chaque phrase
+      setTimeout(nextDialogue, 3000);
     } else {
-      // Fin de la cinématique : on rend la main au joueur
       glitch();
       setTimeout(() => {
         introOverlay.remove();
-        integrity = 20; // On fixe l'intégrité à 20%
+        integrity = 20;
         renderIntegrity();
-        gameOver = false; // Débloque le clavier
+        gameOver = false;
+
+        // 3. Réactiver l'UI et la souris
+        hackerLine.style.display = "block";
+        breadcrumb.style.display = "block";
+        screenEl.style.pointerEvents = "auto";
+
+        // 4. Forcer les 2 prochains glitchs au clic
+        window.GLITCH_CONFIG.triggerReverse = true;
+        window.GLITCH_CONFIG.triggerSwap = true;
+
         renderList();
         typeText("SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.");
       }, 2000);
     }
   }
-  // Lance la première phrase après 1 seconde
   setTimeout(nextDialogue, 1000);
 }
 
@@ -516,7 +531,7 @@ function triggerGameOver() {
     overlay.id = "overlay-msg";
 
     const bigMsg = document.createElement("div");
-    bigMsg.className = "big-msg";
+    bigMsg.className = "big-msg red-alert";
     bigMsg.textContent = "// SYSTÈME COMPROMIS //";
 
     const speech = document.createElement("div");
@@ -535,75 +550,6 @@ function triggerGameOver() {
     crtScreen.appendChild(overlay);
     hackerLine.textContent = "";
   }, delay + 1500);
-}
-
-// ── WIN ─────────────────────────────────────────────────────────────
-function triggerWin() {
-  gameOver = true;
-  playSound(sndGood); // AUDIO
-  typeText("NON... IMPOSSIBLE.");
-  const currentSession = sessionID; // Fix session
-
-  setTimeout(() => {
-    if (sessionID !== currentSession) return;
-    screenEl.innerHTML = "";
-    breadcrumb.textContent = "/";
-
-    const overlay = document.createElement("div");
-    overlay.id = "overlay-msg";
-
-    const bigMsg = document.createElement("div");
-    bigMsg.className = "big-msg";
-    bigMsg.textContent = "// VÉRIFICATION FINALE //";
-
-    const checks = document.createElement("div");
-    checks.className = "hacker-speech";
-    checks.style.textAlign = "left";
-    const files = Object.keys(CORRUPTED_FILES);
-    overlay.append(bigMsg, checks);
-    crtScreen.appendChild(overlay);
-
-    let i = 0;
-    function nextCheck() {
-      if (sessionID !== currentSession) return;
-      if (i < files.length) {
-        const line = document.createElement("div");
-        line.textContent = `> vérification ${files[i]}...`;
-        checks.appendChild(line);
-        setTimeout(() => {
-          if (sessionID !== currentSession) return;
-          line.textContent = `> ${files[i]} .............. [OK]`;
-          line.style.color = "var(--fg-rgb)";
-          i++;
-          setTimeout(nextCheck, 400);
-        }, 500);
-      } else {
-        glitch();
-        setTimeout(() => {
-          if (sessionID !== currentSession) return;
-          bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
-          const hackerSpeech = document.createElement("div");
-          hackerSpeech.className = "hacker-speech";
-          hackerSpeech.style.marginTop = "16px";
-          hackerSpeech.innerHTML = `
-            Bien joué... cette fois.<br>
-            Tu as réparé tout ce que j'ai cassé.<br>
-            Mais je reviendrai.<br><br>
-            <span style="opacity:0.5">GHOST_CORE — connexion interrompue</span>
-          `;
-          overlay.appendChild(hackerSpeech);
-          hackerLine.textContent = "";
-
-          // Reboot forcé à la fin de la victoire
-          setTimeout(() => {
-            if (sessionID !== currentSession) return;
-            triggerReboot();
-          }, 3000);
-        }, 600);
-      }
-    }
-    nextCheck();
-  }, 800);
 }
 
 // ── REBOOT ──────────────────────────────────────────────────────────
@@ -716,7 +662,74 @@ document.getElementById("power-btn").addEventListener("click", () => {
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-// ── INIT ────────────────────────────────────────────────────────────
-//renderIntegrity();
-//renderList();
-//typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
+
+/*
+// ── WIN ─────────────────────────────────────────────────────────────
+function triggerWin() {
+  gameOver = true;
+  playSound(sndGood); // AUDIO
+  typeText("NON... IMPOSSIBLE.");
+  const currentSession = sessionID; // Fix session
+
+  setTimeout(() => {
+    if (sessionID !== currentSession) return;
+    screenEl.innerHTML = "";
+    breadcrumb.textContent = "/";
+
+    const overlay = document.createElement("div");
+    overlay.id = "overlay-msg";
+
+    const bigMsg = document.createElement("div");
+    bigMsg.className = "big-msg";
+    bigMsg.textContent = "// VÉRIFICATION FINALE //";
+
+    const checks = document.createElement("div");
+    checks.className = "hacker-speech";
+    checks.style.textAlign = "left";
+    const files = Object.keys(CORRUPTED_FILES);
+    overlay.append(bigMsg, checks);
+    crtScreen.appendChild(overlay);
+
+    let i = 0;
+    function nextCheck() {
+      if (sessionID !== currentSession) return;
+      if (i < files.length) {
+        const line = document.createElement("div");
+        line.textContent = `> vérification ${files[i]}...`;
+        checks.appendChild(line);
+        setTimeout(() => {
+          if (sessionID !== currentSession) return;
+          line.textContent = `> ${files[i]} .............. [OK]`;
+          line.style.color = "var(--fg-rgb)";
+          i++;
+          setTimeout(nextCheck, 400);
+        }, 500);
+      } else {
+        glitch();
+        setTimeout(() => {
+          if (sessionID !== currentSession) return;
+          bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
+          const hackerSpeech = document.createElement("div");
+          hackerSpeech.className = "hacker-speech";
+          hackerSpeech.style.marginTop = "16px";
+          hackerSpeech.innerHTML = `
+            Bien joué... cette fois.<br>
+            Tu as réparé tout ce que j'ai cassé.<br>
+            Mais je reviendrai.<br><br>
+            <span style="opacity:0.5">GHOST_CORE — connexion interrompue</span>
+          `;
+          overlay.appendChild(hackerSpeech);
+          hackerLine.textContent = "";
+
+          // Reboot forcé à la fin de la victoire
+          setTimeout(() => {
+            if (sessionID !== currentSession) return;
+            triggerReboot();
+          }, 3000);
+        }, 600);
+      }
+    }
+    nextCheck();
+  }, 800);
+}
+*/
