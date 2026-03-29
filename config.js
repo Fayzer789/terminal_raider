@@ -62,75 +62,46 @@ export const DIR_REPLIES = [
 
 export const CORRUPTED_FILES = {
   "boucleprob.dhd": {
-    "boucleprob.dhd": {
-      name: "boucleprob.dhd",
-      code: `// Corrigez la condition d'arrêt
-function compter(n) {
-  let i = 0;
-  while (i = n) {
-    console.log(i);
-    i++;
-  }
-}`,
-      reply: "La condition est cassée. Tu vois le bug ?",
-      solution: "Boucle corrigée. Buffer libéré.",
-      validate: (c) => c.includes("i < n") || c.includes("i<n"),
-    },
-    "c0r3dump.xvz": {
-      name: "c0r3dump.xvz",
-      code: `// Ajoutez le cas de base manquant
-function factorielle(n) {
-  // cas de base manquant !
-  return n * factorielle(n - 1);
-}`,
-      reply: "Stack overflow garanti. Cas de base manquant.",
-      solution: "Récursion stabilisée. Stack overflow évité.",
-      validate: (c) => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
-    },
-    "net_ghost.!!x": {
-      name: "net_ghost.!!x",
-      code: `// Corrigez la déclaration de variable
-function saluer(nom) {
-  message = "Accès autorisé, " + nom;
-  return message;
-}`,
-      reply: "Variable globale non déclarée. Fuite mémoire.",
-      solution: "Variable déclarée. Fuite colmatée.",
-      validate: (c) => /\b(let|const|var)\s+message/.test(c),
-    },
-    "sys_krnl.0x9f": {
-      name: "sys_krnl.0x9f",
-      code: `// Protégez contre la division par zéro
-
-function diviser(a, b) {
-  return a / b;
-}`,
-      reply: "Division par zéro possible. Protège ça.",
-      solution: "Division sécurisée. Noyau stabilisé.",
-      validate: (c) => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
-    },
-    "stack_overflow.lua": {
-      name: "stack_overflow.lua",
-      code: `-- Ajoutez un return pour éviter le débordement
--- Solution : Cas de base ajouté, stack stabilisé.
-function recurse(n)
-  return recurse(n - 1)
-end`,
-      reply: "Pas de cas de base, stack overflow imminent.",
-      solution: "Cas de base ajouté, stack stabilisé.",
-      validate: (c) => c.includes("if n <= 1") && c.includes("return"),
-    },
-    "null_ref.obj": {
-      name: "null_ref.obj",
-      code: `// Vérifiez que l'objet n'est pas null
-// Solution : Vérification ajoutée pour null.
-function getValue(obj) {
-  return obj.value;
-}`,
-      reply: "Accès possible à null. Crash probable.",
-      solution: "Vérification ajoutée pour null.",
-      validate: (c) => c.includes("if(obj") && c.includes("return obj.value"),
-    },
+    name: "boucleprob.dhd",
+    code: `// Corrigez la condition d'arrêt\nfunction compter(n) {\n  let i = 0;\n  while (i = n) {\n    console.log(i);\n    i++;\n  }\n}`,
+    reply: "La condition est cassée. Tu vois le bug ?",
+    solution: "Boucle corrigée. Buffer libéré.",
+    validate: (c) => c.includes("i < n") || c.includes("i<n"),
+  },
+  "c0r3dump.xvz": {
+    name: "c0r3dump.xvz",
+    code: `// Ajoutez le cas de base manquant\nfunction factorielle(n) {\n  // cas de base manquant !\n  return n * factorielle(n - 1);\n}`,
+    reply: "Stack overflow garanti. Cas de base manquant.",
+    solution: "Récursion stabilisée. Stack overflow évité.",
+    validate: (c) => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
+  },
+  "net_ghost.!!x": {
+    name: "net_ghost.!!x",
+    code: `// Corrigez la déclaration de variable\nfunction saluer(nom) {\n  message = "Accès autorisé, " + nom;\n  return message;\n}`,
+    reply: "Variable globale non déclarée. Fuite mémoire.",
+    solution: "Variable déclarée. Fuite colmatée.",
+    validate: (c) => /\b(let|const|var)\s+message/.test(c),
+  },
+  "sys_krnl.0x9f": {
+    name: "sys_krnl.0x9f",
+    code: `// Protégez contre la division par zéro\n\nfunction diviser(a, b) {\n  return a / b;\n}`,
+    reply: "Division par zéro possible. Protège ça.",
+    solution: "Division sécurisée. Noyau stabilisé.",
+    validate: (c) => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
+  },
+  "stack_overflow.lua": {
+    name: "stack_overflow.lua",
+    code: `-- Ajoutez un return pour éviter le débordement\n-- Solution : Cas de base ajouté, stack stabilisé.\nfunction recurse(n)\n  return recurse(n - 1)\nend`,
+    reply: "Pas de cas de base, stack overflow imminent.",
+    solution: "Cas de base ajouté, stack stabilisé.",
+    validate: (c) => c.includes("if n <= 1") && c.includes("return"),
+  },
+  "null_ref.obj": {
+    name: "null_ref.obj",
+    code: `// Vérifiez que l'objet n'est pas null\n// Solution : Vérification ajoutée pour null.\nfunction getValue(obj) {\n  return obj.value;\n}`,
+    reply: "Accès possible à null. Crash probable.",
+    solution: "Vérification ajoutée pour null.",
+    validate: (c) => c.includes("if(obj") && c.includes("return obj.value"),
   },
 };
 
