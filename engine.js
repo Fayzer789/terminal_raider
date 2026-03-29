@@ -103,10 +103,17 @@ function renderIntegrity() {
 }
 
 function changeIntegrity(delta) {
+  if (gameOver) return; // Sécurité pour empêcher de gagner/perdre pendant une cinématique
+
   integrity = Math.max(0, Math.min(100, integrity + delta));
   renderIntegrity();
-  if (integrity <= 0) triggerGameOver();
-  if (integrity >= 100 && checkAllFixed()) triggerWin();
+
+  if (integrity <= 0) {
+    triggerGameOver();
+  } else if (integrity >= 100 || checkAllFixed()) {
+    // <-- La correction est le || (OU)
+    triggerWin();
+  }
 }
 
 function checkAllFixed() {
@@ -424,6 +431,61 @@ function mkBtn(label) {
   return b;
 }
 
+// ── HACKER INTRO SEQUENCE ──────────────────────────────────────────
+function triggerHackerIntro() {
+  // Nettoie l'écran actuel
+  screenEl.innerHTML = "";
+  breadcrumb.textContent = "";
+
+  const introOverlay = document.createElement("div");
+  introOverlay.id = "overlay-msg";
+
+  const bigMsg = document.createElement("div");
+  bigMsg.className = "big-msg";
+  bigMsg.textContent = "// INTRUSION GHOST_CORE //";
+
+  const speech = document.createElement("div");
+  speech.className = "hacker-speech";
+
+  introOverlay.append(bigMsg, speech);
+  crtScreen.appendChild(introOverlay);
+
+  const dialogues = [
+    "Un nouvel administrateur ? Pitoyable.",
+    "Tes systèmes de sécurité sont obsolètes.",
+    "Laisse-moi faire un peu de ménage dans tes fichiers...",
+  ];
+
+  let step = 0;
+  function nextDialogue() {
+    if (step < dialogues.length) {
+      glitch(); // Animation de l'écran
+      playSound(sndBug); // Bruit d'erreur
+      speech.innerHTML += `<br>> ${dialogues[step]}`;
+
+      // Baisse l'intégrité manuellement (-26 à chaque phrase)
+      integrity -= 26;
+      renderIntegrity();
+
+      step++;
+      setTimeout(nextDialogue, 2500); // 2.5 secondes entre chaque phrase
+    } else {
+      // Fin de la cinématique : on rend la main au joueur
+      glitch();
+      setTimeout(() => {
+        introOverlay.remove();
+        integrity = 20; // On fixe l'intégrité à 20%
+        renderIntegrity();
+        gameOver = false; // Débloque le clavier
+        renderList();
+        typeText("SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.");
+      }, 2000);
+    }
+  }
+  // Lance la première phrase après 1 seconde
+  setTimeout(nextDialogue, 1000);
+}
+
 // ── GAME OVER ───────────────────────────────────────────────────────
 function triggerGameOver() {
   gameOver = true;
@@ -590,7 +652,6 @@ function resetGame() {
   sessionID++;
   playSound(sndPowerOn);
 
-  // <--- Relance la musique au démarrage
   if (audioUnlocked) sndBackground.play().catch(() => {});
 
   // Nettoyage de l'UI
@@ -602,14 +663,21 @@ function resetGame() {
 
   navStack = [];
   curNodes = FILE_SYSTEM;
-  integrity = 80; // L'intégrité repart de 80%
+  integrity = 100; // 1. On démarre bien à 100%
   selectedIdx = 0;
-  gameOver = false;
+
+  gameOver = true; // 2. ON BLOQUE LE CLAVIER PENDANT LES 3 SECONDES
+
   for (const k in fixedFiles) delete fixedFiles[k];
 
   renderIntegrity();
   renderList();
   typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
+
+  // 3. On déclenche l'attaque du Hacker après 3 secondes pile
+  setTimeout(() => {
+    triggerHackerIntro();
+  }, 3000);
 }
 
 // ── POWER BUTTON ────────────────────────────────────────────────────

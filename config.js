@@ -64,10 +64,9 @@ export const CORRUPTED_FILES = {
   "boucleprob.dhd": {
     name: "boucleprob.dhd",
     code: `// Corrigez la condition d'arrêt
-// Solution : Boucle corrigée. Buffer libéré.
 function compter(n) {
   let i = 0;
-  while (i = n) {   // <- bug ici
+  while (i = n) {
     console.log(i);
     i++;
   }
@@ -79,7 +78,6 @@ function compter(n) {
   "c0r3dump.xvz": {
     name: "c0r3dump.xvz",
     code: `// Ajoutez le cas de base manquant
-// Solution : Récursion stabilisée. Stack overflow évité.
 function factorielle(n) {
   // cas de base manquant !
   return n * factorielle(n - 1);
@@ -91,7 +89,6 @@ function factorielle(n) {
   "net_ghost.!!x": {
     name: "net_ghost.!!x",
     code: `// Corrigez la déclaration de variable
-// Solution : Variable déclarée. Fuite colmatée.
 function saluer(nom) {
   message = "Accès autorisé, " + nom;
   return message;
@@ -103,7 +100,7 @@ function saluer(nom) {
   "sys_krnl.0x9f": {
     name: "sys_krnl.0x9f",
     code: `// Protégez contre la division par zéro
-// Solution : Division sécurisée. Noyau stabilisé.
+
 function diviser(a, b) {
   return a / b;
 }`,
@@ -114,7 +111,6 @@ function diviser(a, b) {
   "stack_overflow.lua": {
     name: "stack_overflow.lua",
     code: `-- Ajoutez un return pour éviter le débordement
--- Solution : Cas de base ajouté, stack stabilisé.
 function recurse(n)
   return recurse(n - 1)
 end`,
@@ -125,7 +121,6 @@ end`,
   "null_ref.obj": {
     name: "null_ref.obj",
     code: `// Vérifiez que l'objet n'est pas null
-// Solution : Vérification ajoutée pour null.
 function getValue(obj) {
   return obj.value;
 }`,
