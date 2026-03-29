@@ -1,0 +1,674 @@
+:root {
+  --fg: 26, 255, 128;
+  --fg-rgb: rgb(26, 255, 128);
+  --fg-rgba: rgba(26, 255, 128, 0.25);
+  --casing: #2a2c20;
+  --casing-shadow: #14150f;
+  --screen-glow: rgba(26, 255, 128, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Share Tech Mono", monospace;
+}
+
+#scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* ── ÉCRAN DE DÉMARRAGE ── */
+#start-screen {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.start-title {
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: rgb(26, 255, 128);
+  text-shadow: 0 0 20px rgb(26, 255, 128);
+}
+
+.start-sub {
+  margin-top: 20px;
+  font-size: 20px;
+  opacity: 0.6;
+  color: rgb(26, 255, 128);
+  text-shadow: 0 0 20px rgb(26, 255, 128);
+}
+
+/* ── BOÎTIER ──
+    .monitor-casing {
+      background: linear-gradient(135deg, #3a3d2d, var(--casing));
+      width: 900px;
+      height: 650px;
+      border-radius: 60px;
+      box-shadow:
+        inset -10px -10px 20px rgba(0, 0, 0, 0.8),
+        inset 10px 10px 20px rgba(255, 255, 255, 0.05),
+        0 20px 50px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 30px 10px;
+      position: relative;
+    }
+
+    .screen-bezel {
+      background: #0a0a0a;
+      width: 100%;
+      flex-grow: 1;
+      border-radius: 40px;
+      box-shadow: inset 0 0 30px #000, 0 3px 0 rgba(255, 255, 255, 0.02);
+      padding: 25px;
+      position: relative;
+    }
+
+        .vents {
+      width: 200px;
+      height: 20px;
+      background: repeating-linear-gradient(90deg, #111, #111 4px, transparent 4px, transparent 12px);
+      border: 1px solid #3d2a15;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+      border-radius: 2px;
+    }
+
+        .power-text {
+      font-size: 8px;
+      color: #666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+    }
+
+    .power-button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+        .bottom-panel {
+      width: 80%;
+      height: 55px;
+      background: linear-gradient(to bottom, #4a4d3a, #2a2c20);
+      margin-top: 10px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.05),
+        inset 0 -5px 10px rgba(0, 0, 0, 0.5),
+        0 10px 20px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+    }
+
+        .screw {
+      width: 14px;
+      height: 14px;
+      background: #111;
+      border-radius: 50%;
+      border: 1px solid #3d2a15;
+      box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+
+*/
+.crt-screen {
+  background: #000;
+  position: absolute;
+  left: 33.2%;
+  top: 9.6%;
+  width: 33.8%;
+  height: 43.1%;
+  border-radius: 12px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.glare {
+  position: absolute;
+  top: -10%;
+  right: -10%;
+  width: 60%;
+  height: 120%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(200, 255, 200, 0.08) 0%,
+    transparent 70%
+  );
+  transform: rotate(15deg);
+  pointer-events: none;
+  filter: blur(15px);
+  z-index: 50;
+}
+
+.scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Animation CRT scanline scroll */
+@keyframes crtScroll {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 10000%;
+  }
+}
+
+.bg-terminal {
+  position: relative;
+  box-shadow: inset 0 0 2rem;
+  background-image: linear-gradient(0deg, #0000 10%, #fff1 90%, #0000 100%);
+  animation: crtScroll 100s linear infinite;
+  background-size: 100% 80%;
+}
+
+.bg-terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+
+/* ── INNER UI ── */
+.terminal-inner-ui {
+  display: none;
+  font-family: "Share Tech Mono", monospace;
+  color: var(--fg-rgb);
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  text-shadow:
+    0 0 4px var(--fg-rgb),
+    0 0 10px rgba(26, 255, 128, 0.5);
+  font-size: 25px;
+  line-height: 1.8;
+  letter-spacing: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  z-index: 20;
+}
+
+/* ── HEADER ── */
+#header-title {
+  font-size: 18px;
+  letter-spacing: 3px;
+  opacity: 0.9;
+  border-bottom: 1px solid rgba(26, 255, 128, 0.3);
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+#hacker-line {
+  font-size: 13px;
+  min-height: 18px;
+  color: rgba(26, 255, 128, 0.7);
+}
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--fg-rgb);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+  box-shadow: 0 0 6px var(--fg-rgb);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── SCREEN CONTENT ── */
+#screen {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── FILE LIST (arborescence sobre) ── */
+#file-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#file-list li {
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 20px;
+  transition:
+    background 0.05s,
+    color 0.05s;
+  white-space: pre;
+  user-select: none;
+  border-left: 2px solid transparent;
+}
+
+#file-list li:hover {
+  background: rgba(26, 255, 128, 0.12);
+  border-left-color: var(--fg-rgb);
+}
+
+#file-list li.selected {
+  background: rgba(26, 255, 128, 0.2);
+  border-left-color: var(--fg-rgb);
+  box-shadow: 0 0 8px rgba(26, 255, 128, 0.15);
+}
+
+#file-list li.corrupted {
+  color: rgba(26, 255, 128, 0.6);
+  text-decoration: underline wavy rgba(26, 255, 128, 0.4);
+}
+
+#file-list li.back {
+  opacity: 0.6;
+  margin-top: 4px;
+  border-top: 1px solid rgba(26, 255, 128, 0.15);
+  padding-top: 6px;
+}
+
+/* ── BREADCRUMB ── */
+#breadcrumb {
+  font-size: 15px;
+  color: rgba(26, 255, 128, 0.5);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  min-height: 14px;
+}
+
+/* ── STATUS BAR ── */
+#statusbar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  color: rgba(26, 255, 128, 0.7);
+  padding: 4px 0 0;
+  border-top: 1px solid rgba(26, 255, 128, 0.2);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+/* ── EDITOR ── */
+#editor-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 6px;
+}
+
+#editor-filename {
+  font-size: 12px;
+  color: rgba(26, 255, 128, 0.8);
+  letter-spacing: 1px;
+}
+
+#code-editor {
+  flex: 1;
+  background: rgba(26, 255, 128, 0.03);
+  border: 1px solid rgba(26, 255, 128, 0.3);
+  color: var(--fg-rgb);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 18px;
+  padding: 15px;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 4px rgba(26, 255, 128, 0.3);
+}
+
+#code-editor:focus {
+  border-color: rgba(26, 255, 128, 0.6);
+  box-shadow: 0 0 10px rgba(26, 255, 128, 0.1);
+}
+
+#editor-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.term-btn {
+  background: transparent;
+  border: 1px solid rgba(26, 255, 128, 0.4);
+  color: var(--fg-rgb);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  text-shadow: 0 0 6px var(--fg-rgb);
+  transition: all 0.1s;
+  letter-spacing: 1px;
+}
+
+.term-btn:hover {
+  background: rgba(26, 255, 128, 0.15);
+  box-shadow: 0 0 10px rgba(26, 255, 128, 0.2);
+}
+
+.term-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+#exec-status {
+  font-size: 18px;
+  margin-left: 8px;
+}
+
+#exec-status.ok {
+  color: var(--fg-rgb);
+  text-shadow: 0 0 8px var(--fg-rgb);
+}
+
+#exec-status.err {
+  color: #ff4444;
+  text-shadow: 0 0 8px #ff4444;
+}
+
+.screw::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  width: 60%;
+  height: 2px;
+  background: #333;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.power-button {
+  width: 25px;
+  height: 25px;
+  background: linear-gradient(135deg, #cc2200, #880000);
+  border-radius: 4px;
+  border: 2px solid #080808;
+  box-shadow:
+    0 0 10px rgba(200, 30, 0, 0.4),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.1s;
+}
+
+.power-button:active {
+  transform: translateY(2px);
+}
+
+/* ── ANIMATIONS DE FIN ── */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+    filter: none;
+  }
+
+  10% {
+    transform: translate(-3px, 1px);
+    filter: hue-rotate(90deg);
+  }
+
+  20% {
+    transform: translate(3px, -1px);
+  }
+
+  30% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(180deg) brightness(2);
+  }
+
+  40% {
+    transform: translate(2px, -2px);
+  }
+
+  50% {
+    transform: translate(-4px, 0);
+    filter: hue-rotate(270deg);
+  }
+
+  60% {
+    transform: translate(4px, 0);
+  }
+
+  70% {
+    transform: translate(0, 3px);
+    filter: brightness(3);
+  }
+
+  80% {
+    transform: translate(-2px, -3px);
+  }
+
+  90% {
+    transform: translate(2px, 2px);
+    filter: hue-rotate(180deg);
+  }
+
+  100% {
+    transform: translate(0);
+    filter: none;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes deleteLine {
+  0% {
+    opacity: 1;
+  }
+
+  30% {
+    background: rgba(255, 0, 0, 0.3);
+  }
+
+  100% {
+    opacity: 0;
+    text-decoration: line-through;
+    color: #ff2200;
+  }
+}
+
+@keyframes scanFlash {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes rebootBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.deleting {
+  animation: deleteLine 0.4s forwards;
+}
+
+/* Modifie ou vérifie ta classe .glitching existante */
+.glitching {
+  animation: glitch 0.2s infinite;
+  /* Optionnel : ajoute un filtre pour simuler l'effet de ta fonction JS */
+  filter: contrast(200%) saturate(300%) hue-rotate(90deg);
+  pointer-events: none;
+  /* Empêche les clics accidentels pendant le glitch */
+}
+
+#overlay-msg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  text-align: center;
+  padding: 20px;
+  animation: fadeIn 0.5s;
+}
+
+#overlay-msg .big-msg {
+  font-size: 22px;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  text-shadow:
+    0 0 20px var(--fg-rgb),
+    0 0 40px var(--fg-rgb);
+}
+
+#overlay-msg .hacker-speech {
+  font-size: 13px;
+  color: rgba(26, 255, 128, 0.7);
+  letter-spacing: 1px;
+  line-height: 1.8;
+  max-width: 500px;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(26, 255, 128, 0.6);
+  box-shadow:
+    0 0 10px var(--fg-rgb),
+    0 0 20px var(--fg-rgb);
+  animation: scanFlash 0.08s infinite;
+}
+
+#reboot-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.3s;
+}
+
+#reboot-screen .rb-line {
+  font-size: 13px;
+  color: rgba(26, 255, 128, 0.6);
+  letter-spacing: 2px;
+  animation: rebootBlink 0.8s infinite;
+}
+
+#reboot-screen .rb-title {
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: var(--fg-rgb);
+  text-shadow: 0 0 20px var(--fg-rgb);
+  animation: none;
+}
