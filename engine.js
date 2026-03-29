@@ -46,7 +46,15 @@ function playSound(a) {
     .catch(() => {});
 }
 function playKey() {
-  playSound(keySounds[Math.floor(Math.random() * keySounds.length)]);
+  if (!audioUnlocked) return;
+  // On clone le son pour pouvoir en jouer plusieurs en même temps (très rapide)
+  const s =
+    keySounds[Math.floor(Math.random() * keySounds.length)].cloneNode(true);
+
+  // C'EST ICI QUE TU RÈGLES LE VOLUME DE L'ÉCRITURE (1.0 = 100% = Maximum)
+  s.volume = 1.0;
+
+  s.play().catch(() => {});
 }
 function playNav() {
   if (!audioUnlocked) return;

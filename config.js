@@ -62,6 +62,7 @@ export const DIR_REPLIES = [
 
 export const CORRUPTED_FILES = {
   "boucleprob.dhd": {
+  "boucleprob.dhd": {
     name: "boucleprob.dhd",
     code: `// Corrigez la condition d'arrêt
 function compter(n) {
@@ -111,6 +112,7 @@ function diviser(a, b) {
   "stack_overflow.lua": {
     name: "stack_overflow.lua",
     code: `-- Ajoutez un return pour éviter le débordement
+-- Solution : Cas de base ajouté, stack stabilisé.
 function recurse(n)
   return recurse(n - 1)
 end`,
@@ -121,6 +123,7 @@ end`,
   "null_ref.obj": {
     name: "null_ref.obj",
     code: `// Vérifiez que l'objet n'est pas null
+// Solution : Vérification ajoutée pour null.
 function getValue(obj) {
   return obj.value;
 }`,
@@ -173,6 +176,18 @@ export const FILE_SYSTEM = [
     children: [
       { type: "file", name: "libc.so" },
       { type: "file", name: "libm.so" },
+      {
+        type: "file",
+        name: "sys_krnl.0x9f",
+        corrupted: true,
+        fileId: "null_ref.obj",
+      },
+      {
+        type: "file",
+        name: "stack_overflow.lua",
+        corrupted: true,
+        fileId: "stack_overflow.lua",
+      },
       {
         type: "file",
         name: "null_ref.obj",
