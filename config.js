@@ -1,14 +1,11 @@
-// ── CONFIG ─────────────────────────────────────────────────────────────
-
-// EXPOSÉ POUR TA DÉMO : Ouvre la console de ton navigateur et tape :
-// GLITCH_CONFIG.triggerSwap = true;    (pour forcer l'échange de 2 fichiers au prochain clic)
-// GLITCH_CONFIG.triggerReverse = true; (pour forcer l'inversion du nom au prochain clic)
 window.GLITCH_CONFIG = {
-  swapProb: 0.02, // 2% de chance que ça arrive naturellement
-  reverseProb: 0.02, // 2% de chance que ça arrive naturellement
+  swapProb: 0.02,
+  reverseProb: 0.02,
   triggerSwap: false,
   triggerReverse: false,
 };
+
+// ── CONFIG ─────────────────────────────────────────────────────────────
 
 export const CLEAN_REPLIES = [
   "Non, pas là...",
@@ -61,47 +58,44 @@ export const DIR_REPLIES = [
 ];
 
 export const CORRUPTED_FILES = {
-  "boucleprob.dhd": {
-    name: "boucleprob.dhd",
-    code: `// Corrigez la condition d'arrêt\nfunction compter(n) {\n  let i = 0;\n  while (i = n) {\n    console.log(i);\n    i++;\n  }\n}`,
-    reply: "La condition est cassée. Tu vois le bug ?",
-    solution: "Boucle corrigée. Buffer libéré.",
-    validate: (c) => c.includes("i < n") || c.includes("i<n"),
-  },
-  "c0r3dump.xvz": {
-    name: "c0r3dump.xvz",
-    code: `// Ajoutez le cas de base manquant\nfunction factorielle(n) {\n  // cas de base manquant !\n  return n * factorielle(n - 1);\n}`,
-    reply: "Stack overflow garanti. Cas de base manquant.",
-    solution: "Récursion stabilisée. Stack overflow évité.",
-    validate: (c) => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
-  },
-  "net_ghost.!!x": {
-    name: "net_ghost.!!x",
+  "ghost_var.js": {
+    name: "ghost_var.js",
     code: `// Corrigez la déclaration de variable\nfunction saluer(nom) {\n  message = "Accès autorisé, " + nom;\n  return message;\n}`,
-    reply: "Variable globale non déclarée. Fuite mémoire.",
+    reply: "Variable globale non déclarée. Fuite mémoire détectée.",
     solution: "Variable déclarée. Fuite colmatée.",
+    // Validation: on cherche "let message", "const message" ou "var message"
     validate: (c) => /\b(let|const|var)\s+message/.test(c),
   },
-  "sys_krnl.0x9f": {
-    name: "sys_krnl.0x9f",
-    code: `// Protégez contre la division par zéro\n\nfunction diviser(a, b) {\n  return a / b;\n}`,
-    reply: "Division par zéro possible. Protège ça.",
-    solution: "Division sécurisée. Noyau stabilisé.",
-    validate: (c) => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
+  "inf_loop.sh": {
+    name: "inf_loop.sh",
+    code: `// boucle infinie!!!!\nfunction bouboucle(n) {\n  while(n == 1) {\n    console.log(n);\n  }\n}`,
+    reply: "Attention, boucle infinie ! Le CPU va fondre.",
+    solution: "Boucle stabilisée. Température CPU normale.",
+    // Validation: on accepte si le joueur incrémente (n++), décrémente (n--), ajoute un break, ou modifie n (n =) // ERREUR !! mauvaise validation...
+    validate: (c) =>
+      c.includes("n++") ||
+      c.includes("n--") ||
+      c.includes("break") ||
+      /n\s*=/.test(c),
   },
-  "stack_overflow.lua": {
-    name: "stack_overflow.lua",
-    code: `-- Ajoutez un return pour éviter le débordement\n-- Solution : Cas de base ajouté, stack stabilisé.\nfunction recurse(n)\n  return recurse(n - 1)\nend`,
-    reply: "Pas de cas de base, stack overflow imminent.",
-    solution: "Cas de base ajouté, stack stabilisé.",
-    validate: (c) => c.includes("if n <= 1") && c.includes("return"),
+  "scope_err.sys": {
+    name: "scope_err.sys",
+    code: `// probleme de scope\nfunction scope() {\n  let x = 5;\n}\nconsole.log(x);`,
+    reply: "Erreur de portée (scope). La variable x est inaccessible ici.",
+    solution: "Portée corrigée. L'accès mémoire est rétabli.",
+    // Validation: le joueur doit soit placer le console.log avant l'accolade fermante, soit sortir le "let x" de la fonction.
+    validate: (c) =>
+      /let\s+x\s*=\s*5;\s*console\.log\(x\);\s*\}/.test(c) ||
+      /let\s+x\s*=\s*5;\s*function/.test(c) ||
+      c.includes("return x"),
   },
-  "null_ref.obj": {
-    name: "null_ref.obj",
-    code: `// Vérifiez que l'objet n'est pas null\n// Solution : Vérification ajoutée pour null.\nfunction getValue(obj) {\n  return obj.value;\n}`,
-    reply: "Accès possible à null. Crash probable.",
-    solution: "Vérification ajoutée pour null.",
-    validate: (c) => c.includes("if(obj") && c.includes("return obj.value"),
+  "typo_log.bin": {
+    name: "typo_log.bin",
+    code: `//il manque un truc\nfunction unPtitTrucEnMoins(x) {\n  console.lg(x);\n}`,
+    reply: "Erreur de syntaxe. Une fonction système est mal orthographiée.",
+    solution: "Syntaxe corrigée. Affichage système opérationnel.",
+    // Validation: on vérifie juste que le "o" de "log" a été ajouté
+    validate: (c) => c.includes("console.log(x)"),
   },
 };
 
@@ -114,9 +108,9 @@ export const FILE_SYSTEM = [
       { type: "file", name: "chmod" },
       {
         type: "file",
-        name: "c0r3dump.xvz",
+        name: "typo_log.bin",
         corrupted: true,
-        fileId: "c0r3dump.xvz",
+        fileId: "typo_log.bin",
       },
     ],
   },
@@ -126,19 +120,12 @@ export const FILE_SYSTEM = [
     children: [
       { type: "file", name: "hosts" },
       { type: "file", name: "passwd" },
+      { type: "file", name: "network" },
       {
         type: "file",
-        name: "net_ghost.!!x",
+        name: "ghost_var.js",
         corrupted: true,
-        fileId: "net_ghost.!!x",
-      },
-      {
-        type: "dir",
-        name: "network",
-        children: [
-          { type: "file", name: "interfaces" },
-          { type: "file", name: "resolv.conf" },
-        ],
+        fileId: "ghost_var.js",
       },
     ],
   },
@@ -150,48 +137,16 @@ export const FILE_SYSTEM = [
       { type: "file", name: "libm.so" },
       {
         type: "file",
-        name: "sys_krnl.0x9f",
+        name: "scope_err.sys",
         corrupted: true,
-        fileId: "null_ref.obj",
-      },
-      {
-        type: "file",
-        name: "stack_overflow.lua",
-        corrupted: true,
-        fileId: "stack_overflow.lua",
-      },
-      {
-        type: "file",
-        name: "null_ref.obj",
-        corrupted: true,
-        fileId: "null_ref.obj",
+        fileId: "scope_err.sys",
       },
     ],
   },
   {
     type: "dir",
     name: "home",
-    children: [
-      {
-        type: "dir",
-        name: "operator",
-        children: [
-          { type: "file", name: ".bashrc" },
-          {
-            type: "file",
-            name: "boucleprob.dhd",
-            corrupted: true,
-            fileId: "boucleprob.dhd",
-          },
-        ],
-      },
-      {
-        type: "file",
-        name: "stack_overflow.lua",
-        corrupted: true,
-        fileId: "stack_overflow.lua",
-      },
-    ],
+    children: [{ type: "file", name: "operator.gov" }],
   },
   {
     type: "dir",
@@ -199,12 +154,6 @@ export const FILE_SYSTEM = [
     children: [
       { type: "file", name: "session.lock" },
       { type: "file", name: "cache" },
-      {
-        type: "file",
-        name: "sys_krnl.0x9f",
-        corrupted: true,
-        fileId: "sys_krnl.0x9f",
-      },
     ],
   },
 ];

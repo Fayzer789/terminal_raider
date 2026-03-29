@@ -98,14 +98,36 @@ const TYPING_SPEED = 50;
 function typeText(text) {
   if (_typTimer) clearTimeout(_typTimer);
   hackerLine.innerHTML = "";
+
   let i = 0;
   const cursor = document.createElement("span");
   cursor.className = "cursor";
-  (function tick() {
+
+  function tick() {
+    // 1. On affiche le bout de texte et le curseur
     hackerLine.textContent = text.slice(0, i);
     hackerLine.appendChild(cursor);
-    if (i++ < text.length) _typTimer = setTimeout(tick, TYPING_SPEED);
-  })();
+
+    // 2. Si on n'a pas fini d'écrire tout le texte
+    if (i < text.length) {
+      // On tente de jouer le son (try/catch évite de faire planter le jeu si l'audio bloque)
+      try {
+        // Optionnel : on évite de faire du bruit sur les espaces pour un rendu plus naturel
+        if (text[i] !== " ") {
+          playKey();
+        }
+      } catch (e) {
+        console.warn("Erreur audio ignorée :", e);
+      }
+
+      // On passe à la lettre suivante et on relance la boucle
+      i++;
+      _typTimer = setTimeout(tick, TYPING_SPEED);
+    }
+  }
+
+  // On lance le premier cycle
+  tick();
 }
 
 // ── INTEGRITY ───────────────────────────────────────────────────────
@@ -458,7 +480,7 @@ function triggerHackerIntro() {
 
   const bigMsg = document.createElement("div");
   bigMsg.className = "big-msg red-alert"; // <-- 2. Utilise la couleur ROUGE
-  bigMsg.textContent = "// INTRUSION GHOST_CORE //";
+  bigMsg.textContent = "// INTRUSION TERMINAL_RAIDER //";
 
   const speech = document.createElement("div");
   speech.className = "hacker-speech";
@@ -670,74 +692,3 @@ document.getElementById("power-btn").addEventListener("click", () => {
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-
-/*
-// ── WIN ─────────────────────────────────────────────────────────────
-function triggerWin() {
-  gameOver = true;
-  playSound(sndGood); // AUDIO
-  typeText("NON... IMPOSSIBLE.");
-  const currentSession = sessionID; // Fix session
-
-  setTimeout(() => {
-    if (sessionID !== currentSession) return;
-    screenEl.innerHTML = "";
-    breadcrumb.textContent = "/";
-
-    const overlay = document.createElement("div");
-    overlay.id = "overlay-msg";
-
-    const bigMsg = document.createElement("div");
-    bigMsg.className = "big-msg";
-    bigMsg.textContent = "// VÉRIFICATION FINALE //";
-
-    const checks = document.createElement("div");
-    checks.className = "hacker-speech";
-    checks.style.textAlign = "left";
-    const files = Object.keys(CORRUPTED_FILES);
-    overlay.append(bigMsg, checks);
-    crtScreen.appendChild(overlay);
-
-    let i = 0;
-    function nextCheck() {
-      if (sessionID !== currentSession) return;
-      if (i < files.length) {
-        const line = document.createElement("div");
-        line.textContent = `> vérification ${files[i]}...`;
-        checks.appendChild(line);
-        setTimeout(() => {
-          if (sessionID !== currentSession) return;
-          line.textContent = `> ${files[i]} .............. [OK]`;
-          line.style.color = "var(--fg-rgb)";
-          i++;
-          setTimeout(nextCheck, 400);
-        }, 500);
-      } else {
-        glitch();
-        setTimeout(() => {
-          if (sessionID !== currentSession) return;
-          bigMsg.textContent = "// SYSTÈME RESTAURÉ //";
-          const hackerSpeech = document.createElement("div");
-          hackerSpeech.className = "hacker-speech";
-          hackerSpeech.style.marginTop = "16px";
-          hackerSpeech.innerHTML = `
-            Bien joué... cette fois.<br>
-            Tu as réparé tout ce que j'ai cassé.<br>
-            Mais je reviendrai.<br><br>
-            <span style="opacity:0.5">GHOST_CORE — connexion interrompue</span>
-          `;
-          overlay.appendChild(hackerSpeech);
-          hackerLine.textContent = "";
-
-          // Reboot forcé à la fin de la victoire
-          setTimeout(() => {
-            if (sessionID !== currentSession) return;
-            triggerReboot();
-          }, 3000);
-        }, 600);
-      }
-    }
-    nextCheck();
-  }, 800);
-}
-*/
