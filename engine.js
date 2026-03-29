@@ -621,12 +621,17 @@ document.getElementById("power-btn").addEventListener("click", () => {
   if (!started) {
     started = true;
 
-    // 1. Supprime l'écran noir de démarrage
+    // 1. Supprime ou masque l'écran de démarrage
     const startScreen = document.getElementById("start-screen");
-    if (startScreen) startScreen.remove();
+    if (startScreen) {
+      startScreen.style.display = "none"; // On le cache
+    }
 
     // 2. Affiche l'interface du terminal
-    document.querySelector(".terminal-inner-ui").style.display = "flex";
+    const ui = document.querySelector(".terminal-inner-ui");
+    if (ui) {
+      ui.style.setProperty("display", "flex", "important"); // On force l'affichage
+    }
 
     // 3. Lance la séquence de boot
     playSound(sndPowerOn);
