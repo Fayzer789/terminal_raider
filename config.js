@@ -61,33 +61,77 @@ export const DIR_REPLIES = [
 ];
 
 export const CORRUPTED_FILES = {
-  "boucleprob.dhd": {   
+  "boucleprob.dhd": {
     name: "boucleprob.dhd",
-    code: `// Corrigez la condition d'arrêt\n\nfunction compter(n) {\n  let i = 0;\n  while (i = n) {   // <- bug ici\n    console.log(i);\n    i++;\n  }\n}`,
+    code: `// Corrigez la condition d'arrêt
+// Solution : Boucle corrigée. Buffer libéré.
+function compter(n) {
+  let i = 0;
+  while (i = n) {   // <- bug ici
+    console.log(i);
+    i++;
+  }
+}`,
     reply: "La condition est cassée. Tu vois le bug ?",
     solution: "Boucle corrigée. Buffer libéré.",
     validate: (c) => c.includes("i < n") || c.includes("i<n"),
   },
   "c0r3dump.xvz": {
     name: "c0r3dump.xvz",
-    code: `// Ajoutez le cas de base manquant\n\nfunction factorielle(n) {\n  // cas de base manquant !\n  return n * factorielle(n - 1);\n}`,
+    code: `// Ajoutez le cas de base manquant
+// Solution : Récursion stabilisée. Stack overflow évité.
+function factorielle(n) {
+  // cas de base manquant !
+  return n * factorielle(n - 1);
+}`,
     reply: "Stack overflow garanti. Cas de base manquant.",
     solution: "Récursion stabilisée. Stack overflow évité.",
     validate: (c) => /n\s*[=<]=?\s*[01]/.test(c) && c.includes("return"),
   },
   "net_ghost.!!x": {
     name: "net_ghost.!!x",
-    code: `// Corrigez la déclaration de variable\n\nfunction saluer(nom) {\n  message = "Accès autorisé, " + nom;\n  return message;\n}`,
+    code: `// Corrigez la déclaration de variable
+// Solution : Variable déclarée. Fuite colmatée.
+function saluer(nom) {
+  message = "Accès autorisé, " + nom;
+  return message;
+}`,
     reply: "Variable globale non déclarée. Fuite mémoire.",
     solution: "Variable déclarée. Fuite colmatée.",
     validate: (c) => /\b(let|const|var)\s+message/.test(c),
   },
   "sys_krnl.0x9f": {
     name: "sys_krnl.0x9f",
-    code: `// Protégez contre la division par zéro\n\nfunction diviser(a, b) {\n  return a / b;\n}`,
+    code: `// Protégez contre la division par zéro
+// Solution : Division sécurisée. Noyau stabilisé.
+function diviser(a, b) {
+  return a / b;
+}`,
     reply: "Division par zéro possible. Protège ça.",
     solution: "Division sécurisée. Noyau stabilisé.",
     validate: (c) => /b\s*[!=]=+\s*0/.test(c) && c.includes("return"),
+  },
+  "stack_overflow.lua": {
+    name: "stack_overflow.lua",
+    code: `-- Ajoutez un return pour éviter le débordement
+-- Solution : Cas de base ajouté, stack stabilisé.
+function recurse(n)
+  return recurse(n - 1)
+end`,
+    reply: "Pas de cas de base, stack overflow imminent.",
+    solution: "Cas de base ajouté, stack stabilisé.",
+    validate: (c) => c.includes("if n <= 1") && c.includes("return"),
+  },
+  "null_ref.obj": {
+    name: "null_ref.obj",
+    code: `// Vérifiez que l'objet n'est pas null
+// Solution : Vérification ajoutée pour null.
+function getValue(obj) {
+  return obj.value;
+}`,
+    reply: "Accès possible à null. Crash probable.",
+    solution: "Vérification ajoutée pour null.",
+    validate: (c) => c.includes("if(obj") && c.includes("return obj.value"),
   },
 };
 
@@ -136,9 +180,9 @@ export const FILE_SYSTEM = [
       { type: "file", name: "libm.so" },
       {
         type: "file",
-        name: "sys_krnl.0x9f",
+        name: "null_ref.obj",
         corrupted: true,
-        fileId: "sys_krnl.0x9f",
+        fileId: "null_ref.obj",
       },
     ],
   },
@@ -159,6 +203,12 @@ export const FILE_SYSTEM = [
           },
         ],
       },
+      {
+        type: "file",
+        name: "stack_overflow.lua",
+        corrupted: true,
+        fileId: "stack_overflow.lua",
+      },
     ],
   },
   {
@@ -167,6 +217,12 @@ export const FILE_SYSTEM = [
     children: [
       { type: "file", name: "session.lock" },
       { type: "file", name: "cache" },
+      {
+        type: "file",
+        name: "sys_krnl.0x9f",
+        corrupted: true,
+        fileId: "sys_krnl.0x9f",
+      },
     ],
   },
 ];
