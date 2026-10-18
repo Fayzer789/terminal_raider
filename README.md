@@ -4,7 +4,7 @@ A small browser game we built during a hackathon. A hacker has corrupted files o
 
 **[Play it here](https://fayzer789.github.io/terminal_raider/fallout.html)**
 
-![Terminal Raider gameplay](./images/terminal_raider_preview.png)
+![Terminal Raider gameplay](./screenshots/terminal_raider_preview.png)
 
 ## What is it?
 
