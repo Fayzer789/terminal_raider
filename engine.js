@@ -3,551 +3,506 @@ import {
   DIR_REPLIES,
   CORRUPTED_FILES,
   FILE_SYSTEM,
+  GLITCH_CONFIG,
 } from "./config.js";
 
-// ── AUDIO SYSTEM (INJECTÉ) ──────────────────────────────────────────
-const SP = "./sounds/";
+// ── AUDIO ───────────────────────────────────────────────────────────────
+const SOUND_PATH = "./sounds/";
+const VOLUME = {
+  background: 0.12,
+  typing: 0.045,
+  navigation: 0.075,
+  hover: 0.04,
+  normal: 0.12,
+  error: 0.10,
+  success: 0.12,
+  bug: 0.10,
+  buzz: 0.09,
+  power: 0.12,
+};
+
 let audioUnlocked = false;
+const keySounds = Array.from({ length: 10 }, (_, index) => {
+  const sound = new Audio(`${SOUND_PATH}k${index + 1}.ogg`);
+  sound.preload = "auto";
+  return sound;
+});
+const sndEnter = new Audio(`${SOUND_PATH}kenter.ogg`);
+const sndBad = new Audio(`${SOUND_PATH}passbad.ogg`);
+const sndGood = new Audio(`${SOUND_PATH}passgood.ogg`);
+const sndPowerOn = new Audio(`${SOUND_PATH}poweron.ogg`);
+const sndPowerOff = new Audio(`${SOUND_PATH}poweroff.ogg`);
+const sndBackground = new Audio(`${SOUND_PATH}background_sound.mp3`);
+const sndBug = new Audio(`${SOUND_PATH}bugEffect.mp3`);
+const sndBuzz = new Audio(`${SOUND_PATH}buzzSound.mp3`);
 
-const keySounds = Array.from(
-  { length: 10 },
-  (_, i) => new Audio(`${SP}k${i + 1}.ogg`),
-);
-const sndEnter = new Audio(`${SP}kenter.ogg`);
-const sndBad = new Audio(`${SP}passbad.ogg`);
-const sndGood = new Audio(`${SP}passgood.ogg`);
-const sndPowerOn = new Audio(`${SP}poweron.ogg`);
-const sndPowerOff = new Audio(`${SP}poweroff.ogg`);
-const sndBackground = new Audio(`${SP}background_sound.mp3`);
 sndBackground.loop = true;
-sndBackground.volume = 0.8;
-
-const sndBug = new Audio(`${SP}bugEffect.mp3`);
-sndBug.volume = 0.2;
+sndBackground.volume = VOLUME.background;
+sndBackground.preload = "auto";
 sndBug.preload = "auto";
-
-// --- NOUVEAU SON BUZZ ---
-const sndBuzz = new Audio(`${SP}buzzSound.mp3`);
-sndBuzz.preload = "auto"; // Force la mise en cache pour un lancement immédiat
-sndBuzz.volume = 0.5; // Ajuste le volume si besoin
+sndBuzz.preload = "auto";
 
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-
   sndBackground.currentTime = 0;
+  sndBackground.volume = VOLUME.background;
   sndBackground.play().catch(() => {});
 }
 
-function playSound(a) {
-  if (!audioUnlocked) return;
-  a.cloneNode(true)
-    .play()
-    .catch(() => {});
-}
-function playKey() {
-  if (!audioUnlocked) return;
-  // On clone le son pour pouvoir en jouer plusieurs en même temps (très rapide)
-  const s =
-    keySounds[Math.floor(Math.random() * keySounds.length)].cloneNode(true);
+function playSound(audio, volume = VOLUME.normal) {
+  if (!audioUnlocked || !audio) return;
 
-  // C'EST ICI QUE TU RÈGLES LE VOLUME DE L'ÉCRITURE (1.0 = 100% = Maximum)
-  s.volume = 1.0;
-
-  s.play().catch(() => {});
+  // Un clone permet de superposer brièvement plusieurs effets sans couper l'ancien.
+  const sound = audio.cloneNode(true);
+  sound.volume = Math.max(0, Math.min(1, volume));
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
 }
+
+function playKey(volume = VOLUME.typing) {
+  const sound = keySounds[Math.floor(Math.random() * keySounds.length)];
+  playSound(sound, volume);
+}
+
 function playNav() {
-  if (!audioUnlocked) return;
-  const s = keySounds[Math.floor(Math.random() * 3)].cloneNode(true);
-  s.volume = 0.45;
-  s.play().catch(() => {});
-}
-function playHover() {
-  if (!audioUnlocked) return;
-  const s = keySounds[0].cloneNode(true);
-  s.volume = 0.2;
-  s.play().catch(() => {});
+  const sound = keySounds[Math.floor(Math.random() * 3)];
+  playSound(sound, VOLUME.navigation);
 }
 
-// ── DOM ─────────────────────────────────────────────────────────────
-/*document.addEventListener("mousemove", (e) => {
-  const x = (e.clientX / window.innerWidth) * 100;
-  const y = (e.clientY / window.innerHeight) * 100;
-  document.title = `X: ${x.toFixed(2)}% Y: ${y.toFixed(2)}%`;
-});
-*/
+function playHover() {
+  playSound(keySounds[0], VOLUME.hover);
+}
+
+// ── DOM ─────────────────────────────────────────────────────────────────
 const hackerLine = document.getElementById("hacker-line");
 const screenEl = document.getElementById("screen");
 const hoverName = document.getElementById("hover-name");
 const integrityEl = document.getElementById("integrity-bar");
 const breadcrumb = document.getElementById("breadcrumb");
 const crtScreen = document.querySelector(".crt-screen");
+const powerButton = document.getElementById("power-btn");
 
-// ── STATE ───────────────────────────────────────────────────────────
+if (!hackerLine || !screenEl || !hoverName || !integrityEl || !breadcrumb || !crtScreen || !powerButton) {
+  throw new Error("ROBCO TERMLINK : un ou plusieurs éléments HTML requis sont manquants.");
+}
+
+// ── ÉTAT DU JEU ─────────────────────────────────────────────────────────
 let navStack = [];
-let curNodes = FILE_SYSTEM;
-let integrity = 90; // Modifié : démarre à 90%
+let gameFileSystem = structuredClone(FILE_SYSTEM);
+let curNodes = gameFileSystem;
+let integrity = 100;
 let selectedIdx = 0;
 let gameOver = false;
-let _typTimer = null;
-let sessionID = 0; // Ajouté : identifiant de session pour tuer les setTimeouts
+let gameWon = false;
+let started = false;
+let typingTimer = null;
+let sessionID = 0;
+let introRunning = false;
+const fixedFiles = Object.create(null);
 
-// ── TYPING ──────────────────────────────────────────────────────────
-const TYPING_SPEED = 50;
+const TYPING_SPEED = 45;
+const INTRO_DELAY = 3000;
+const ERROR_PENALTY = 25;
+const REPAIR_REWARD = 15;
 
+// ── TEXTE ──────────────────────────────────────────────────────────────
 function typeText(text) {
-  if (_typTimer) clearTimeout(_typTimer);
-  hackerLine.innerHTML = "";
+  if (typingTimer) clearTimeout(typingTimer);
+  hackerLine.textContent = "";
 
-  let i = 0;
+  let index = 0;
   const cursor = document.createElement("span");
   cursor.className = "cursor";
 
   function tick() {
-    // 1. On affiche le bout de texte et le curseur
-    hackerLine.textContent = text.slice(0, i);
+    hackerLine.textContent = text.slice(0, index);
     hackerLine.appendChild(cursor);
 
-    // 2. Si on n'a pas fini d'écrire tout le texte
-    if (i < text.length) {
-      // On tente de jouer le son (try/catch évite de faire planter le jeu si l'audio bloque)
-      try {
-        // Optionnel : on évite de faire du bruit sur les espaces pour un rendu plus naturel
-        if (text[i] !== " ") {
-          playKey();
-        }
-      } catch (e) {
-        console.warn("Erreur audio ignorée :", e);
-      }
-
-      // On passe à la lettre suivante et on relance la boucle
-      i++;
-      _typTimer = setTimeout(tick, TYPING_SPEED);
+    if (index < text.length) {
+      if (text[index] !== " ") playKey();
+      index += 1;
+      typingTimer = setTimeout(tick, TYPING_SPEED);
+    } else {
+      typingTimer = null;
     }
   }
 
-  // On lance le premier cycle
   tick();
 }
 
-// ── INTEGRITY ───────────────────────────────────────────────────────
+function cancelTyping() {
+  if (typingTimer) clearTimeout(typingTimer);
+  typingTimer = null;
+}
+
+// ── INTÉGRITÉ ET PROGRESSION ───────────────────────────────────────────
 function renderIntegrity() {
-  const BARS = 10;
-  const on = Math.round((integrity / 100) * BARS);
-  integrityEl.textContent = `INTÉGRITÉ [${"█".repeat(on)}${"░".repeat(BARS - on)}] ${integrity}%`;
-}
-
-function changeIntegrity(delta) {
-  if (gameOver) return; // Sécurité pour empêcher de gagner/perdre pendant une cinématique
-
-  integrity = Math.max(0, Math.min(100, integrity + delta));
-  renderIntegrity();
-
-  if (integrity <= 0) {
-    triggerGameOver();
-  } else if (integrity >= 100 || checkAllFixed()) {
-    // <-- La correction est le || (OU)
-    triggerWin();
-  }
-}
-
-function checkAllFixed() {
-  const total = Object.keys(CORRUPTED_FILES).length;
-  return fixedCount() >= total;
+  const barCount = 10;
+  const safeIntegrity = Math.max(0, Math.min(100, integrity));
+  const filledBars = Math.round((safeIntegrity / 100) * barCount);
+  integrityEl.textContent = `INTÉGRITÉ [${"█".repeat(filledBars)}${"░".repeat(barCount - filledBars)}] ${safeIntegrity}%`;
 }
 
 function fixedCount() {
   return Object.values(fixedFiles).filter(Boolean).length;
 }
 
-const fixedFiles = {};
+function checkAllFixed() {
+  return fixedCount() >= Object.keys(CORRUPTED_FILES).length;
+}
 
-// ── BREADCRUMB ──────────────────────────────────────────────────────
+function changeIntegrity(delta) {
+  if (gameOver || gameWon) return;
+
+  integrity = Math.max(0, Math.min(100, integrity + delta));
+  renderIntegrity();
+
+  // Atteindre 100 % ne suffit pas à gagner : il faut réparer tous les fichiers.
+  if (integrity <= 0) triggerGameOver();
+}
+
+// ── NAVIGATION ET CHEMIN ───────────────────────────────────────────────
 function buildPath() {
   if (navStack.length === 0) return "/";
-  return "/" + navStack.map((s) => s.dirName || "?").join("/") + "/";
+  return `/${navStack.map((entry) => entry.dirName || "?").join("/")}/`;
 }
 
-//GLITCH
 function glitch() {
-  const terminal = document.querySelector(".crt-screen");
-  if (!terminal) return;
-
-  // On ajoute la classe CSS
-  terminal.classList.add("glitching");
-
-  // On la retire après 1.2s (la durée que tu avais choisie)
+  if (!crtScreen) return;
+  crtScreen.classList.add("glitching");
+  const currentSession = sessionID;
   setTimeout(() => {
-    terminal.classList.remove("glitching");
-  }, 1200);
+    if (sessionID === currentSession) crtScreen.classList.remove("glitching");
+  }, 900);
 }
 
-// ── RENDER LIST ─────────────────────────────────────────────────────
 function renderList() {
   screenEl.innerHTML = "";
-  selectedIdx = Math.min(
-    selectedIdx,
-    curNodes.length - 1 + (navStack.length > 0 ? 1 : 0),
-  );
-
+  const totalItems = curNodes.length + (navStack.length > 0 ? 1 : 0);
+  selectedIdx = totalItems === 0 ? 0 : Math.min(selectedIdx, totalItems - 1);
   breadcrumb.textContent = buildPath();
-  const ul = document.createElement("ul");
-  ul.id = "file-list";
 
-  curNodes.forEach((node, i) => {
-    const li = document.createElement("li");
-    const prefix = "> ";
-    const suffix = node.type === "dir" ? node.name + "/" : node.name;
-    li.textContent = prefix + suffix;
-    if (node.corrupted && !fixedFiles[node.fileId])
-      li.classList.add("corrupted");
-    if (i === selectedIdx) li.classList.add("selected");
+  const list = document.createElement("ul");
+  list.id = "file-list";
 
-    li.addEventListener("mouseenter", () => {
-      hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
-      selectedIdx = i;
+  curNodes.forEach((node, index) => {
+    const item = document.createElement("li");
+    item.textContent = `> ${node.type === "dir" ? `${node.name}/` : node.name}`;
+
+    if (node.corrupted && !fixedFiles[node.fileId]) item.classList.add("corrupted");
+    if (index === selectedIdx) item.classList.add("selected");
+
+    item.addEventListener("mouseenter", () => {
+      hoverName.textContent = node.type === "dir" ? `${node.name}/` : node.name;
+      selectedIdx = index;
       refreshSelected();
-      playHover(); // AUDIO
+      playHover();
     });
-    li.addEventListener("mouseleave", () => {
+    item.addEventListener("mouseleave", () => {
       hoverName.textContent = "";
     });
-    li.addEventListener("click", () => {
-      unlockAudio(); // AUDIO
-      activateNode(node, i);
+    item.addEventListener("click", () => {
+      unlockAudio();
+      activateNode(node, index);
     });
-    ul.appendChild(li);
+    list.appendChild(item);
   });
 
   if (navStack.length > 0) {
-    const backIdx = curNodes.length;
-    const back = document.createElement("li");
-    back.textContent = "> ../";
-    back.className = "back";
-    if (selectedIdx === backIdx) back.classList.add("selected");
-    back.addEventListener("mouseenter", () => {
+    const backIndex = curNodes.length;
+    const backItem = document.createElement("li");
+    backItem.textContent = "> ../";
+    backItem.className = "back";
+    if (selectedIdx === backIndex) backItem.classList.add("selected");
+
+    backItem.addEventListener("mouseenter", () => {
       hoverName.textContent = "[ retour ]";
-      selectedIdx = backIdx;
+      selectedIdx = backIndex;
       refreshSelected();
-      playHover(); // AUDIO
+      playHover();
     });
-    back.addEventListener("mouseleave", () => {
+    backItem.addEventListener("mouseleave", () => {
       hoverName.textContent = "";
     });
-    back.addEventListener("click", () => {
-      unlockAudio(); // AUDIO
+    backItem.addEventListener("click", () => {
+      unlockAudio();
       goBack();
     });
-    ul.appendChild(back);
+    list.appendChild(backItem);
   }
 
-  screenEl.appendChild(ul);
+  screenEl.appendChild(list);
 }
 
 function refreshSelected() {
-  const items = screenEl.querySelectorAll("#file-list li");
-  items.forEach((li, i) => {
-    li.classList.toggle("selected", i === selectedIdx);
+  screenEl.querySelectorAll("#file-list li").forEach((item, index) => {
+    item.classList.toggle("selected", index === selectedIdx);
   });
 }
 
-function activateNode(node, idx) {
-  if (gameOver) return;
-
-  // GLITCH 1 : Inversion du nom du fichier
-  if (
-    window.GLITCH_CONFIG.triggerReverse ||
-    Math.random() < window.GLITCH_CONFIG.reverseProb
-  ) {
-    window.GLITCH_CONFIG.triggerReverse = false;
-    node.name = node.name.split("").reverse().join("");
-    renderList();
-    playSound(sndBug); // <--- NOUVEAU SON ICI
-    typeText("ERREUR: Index de fichier corrompu...");
-    return;
-  }
-
-  // GLITCH 2 : Échange de position avec un autre fichier
-  if (
-    window.GLITCH_CONFIG.triggerSwap ||
-    Math.random() < window.GLITCH_CONFIG.swapProb
-  ) {
-    window.GLITCH_CONFIG.triggerSwap = false;
-    if (curNodes.length > 1) {
-      let swapIdx = idx;
-      while (swapIdx === idx)
-        swapIdx = Math.floor(Math.random() * curNodes.length);
-
-      let temp = curNodes[idx];
-      curNodes[idx] = curNodes[swapIdx];
-      curNodes[swapIdx] = temp;
-
-      renderList();
-      playSound(sndBug); // <--- NOUVEAU SON ICI
-      typeText("ERREUR: Décalage du secteur mémoire...");
-      return;
-    }
-  }
-
-  if (node.type === "dir") {
-    playSound(sndEnter);
-    navStack.push({ nodes: curNodes, dirName: node.name });
-    curNodes = node.children;
-    selectedIdx = 0;
-    renderList();
-    typeText(pick(DIR_REPLIES));
-  } else if (node.corrupted && !fixedFiles[node.fileId]) {
-    // --- SON BUZZ IMMÉDIAT ICI ---
-    sndBuzz.currentTime = 0;
-    sndBuzz.play().catch(() => {});
-
-    openEditor(node.fileId);
-  } else {
-    playSound(sndBad);
-    typeText(pick(CLEAN_REPLIES));
-  }
-}
-
-function goBack() {
-  if (navStack.length === 0) return;
-  playSound(sndEnter); // AUDIO
-  const prev = navStack.pop();
-  curNodes = prev.nodes;
-  selectedIdx = 0;
-  renderList();
-  typeText("...");
-}
-
-// ── KEYBOARD NAV ────────────────────────────────────────────────────
-document.addEventListener("keydown", (e) => {
-  unlockAudio(); // AUDIO
-
-  if (gameOver) return;
-  if (!screenEl.querySelector("#file-list")) return;
-
-  const total = curNodes.length + (navStack.length > 0 ? 1 : 0);
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    selectedIdx = (selectedIdx + 1) % total;
-    refreshSelected();
-    scrollSelectedIntoView();
-    updateHoverFromSelected();
-    playNav(); // AUDIO
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    selectedIdx = (selectedIdx - 1 + total) % total;
-    refreshSelected();
-    scrollSelectedIntoView();
-    updateHoverFromSelected();
-    playNav(); // AUDIO
-  } else if (e.key === "Enter" || e.key === "ArrowRight") {
-    e.preventDefault();
-    if (selectedIdx < curNodes.length) {
-      activateNode(curNodes[selectedIdx], selectedIdx);
-    } else if (navStack.length > 0) {
-      goBack();
-    }
-  } else if (e.key === "ArrowLeft" || e.key === "Backspace") {
-    e.preventDefault();
-    goBack();
-  }
-});
-
 function scrollSelectedIntoView() {
   const items = screenEl.querySelectorAll("#file-list li");
-  if (items[selectedIdx])
-    items[selectedIdx].scrollIntoView({ block: "nearest" });
+  items[selectedIdx]?.scrollIntoView({ block: "nearest" });
 }
 
 function updateHoverFromSelected() {
   if (selectedIdx < curNodes.length) {
     const node = curNodes[selectedIdx];
-    hoverName.textContent = node.type === "dir" ? node.name + "/" : node.name;
+    hoverName.textContent = node.type === "dir" ? `${node.name}/` : node.name;
   } else {
     hoverName.textContent = "[ retour ]";
   }
 }
 
-// ── EDITOR ──────────────────────────────────────────────────────────
+function activateNode(node, index) {
+  if (gameOver || gameWon || introRunning) return;
+
+  const shouldReverse = GLITCH_CONFIG.triggerReverse || Math.random() < GLITCH_CONFIG.reverseProb;
+  if (shouldReverse) {
+    GLITCH_CONFIG.triggerReverse = false;
+    node.name = node.name.split("").reverse().join("");
+    renderList();
+    glitch();
+    playSound(sndBug, VOLUME.bug);
+    typeText("ERREUR : index de fichier corrompu...");
+    return;
+  }
+
+  const shouldSwap = GLITCH_CONFIG.triggerSwap || Math.random() < GLITCH_CONFIG.swapProb;
+  if (shouldSwap && curNodes.length > 1) {
+    GLITCH_CONFIG.triggerSwap = false;
+    let swapIndex = index;
+    while (swapIndex === index) swapIndex = Math.floor(Math.random() * curNodes.length);
+    [curNodes[index], curNodes[swapIndex]] = [curNodes[swapIndex], curNodes[index]];
+    renderList();
+    glitch();
+    playSound(sndBug, VOLUME.bug);
+    typeText("ERREUR : décalage du secteur mémoire...");
+    return;
+  }
+  GLITCH_CONFIG.triggerSwap = false;
+
+  if (node.type === "dir") {
+    playSound(sndEnter, VOLUME.normal);
+    navStack.push({ nodes: curNodes, dirName: node.name });
+    curNodes = node.children;
+    selectedIdx = 0;
+    renderList();
+    typeText(pick(DIR_REPLIES));
+    return;
+  }
+
+  if (node.corrupted && !fixedFiles[node.fileId]) {
+    playSound(sndBuzz, VOLUME.buzz);
+    openEditor(node.fileId);
+    return;
+  }
+
+  playSound(sndBad, VOLUME.error);
+  typeText(pick(CLEAN_REPLIES));
+}
+
+function goBack() {
+  if (navStack.length === 0 || gameOver || gameWon || introRunning) return;
+  playSound(sndEnter, VOLUME.normal);
+  const previous = navStack.pop();
+  curNodes = previous.nodes;
+  selectedIdx = 0;
+  renderList();
+  typeText("...");
+}
+
+// ── ÉDITEUR DE FICHIERS ────────────────────────────────────────────────
 function openEditor(fileId) {
   glitch();
   const file = CORRUPTED_FILES[fileId];
-  if (!file) return;
+  if (!file) {
+    typeText("ERREUR : fichier de correction introuvable.");
+    return;
+  }
+
   typeText(file.reply);
   screenEl.innerHTML = "";
-  breadcrumb.textContent = buildPath() + file.name + " — CORRECTION REQUISE";
+  breadcrumb.textContent = `${buildPath()}${file.name} — CORRECTION REQUISE`;
 
   const view = document.createElement("div");
   view.id = "editor-view";
-  const fname = document.createElement("div");
-  fname.id = "editor-filename";
 
-  const ta = document.createElement("textarea");
-  ta.id = "code-editor";
-  ta.spellcheck = false;
-  ta.value = file.code;
-  ta.addEventListener("keydown", (ev) => {
-    unlockAudio(); // AUDIO
-    if (ev.key.length === 1 || ev.key === "Backspace" || ev.key === "Enter") {
-      playKey(); // AUDIO
+  const filename = document.createElement("div");
+  filename.id = "editor-filename";
+  filename.textContent = file.name;
+
+  const textarea = document.createElement("textarea");
+  textarea.id = "code-editor";
+  textarea.spellcheck = false;
+  textarea.value = file.code;
+
+  textarea.addEventListener("keydown", (event) => {
+    unlockAudio();
+    if (event.key.length === 1 || event.key === "Backspace" || event.key === "Enter") {
+      playKey(0.055);
     }
 
-    if (ev.key === "Tab") {
-      ev.preventDefault();
-      playKey(); // AUDIO
-      const s = ta.selectionStart;
-      ta.value = ta.value.slice(0, s) + "  " + ta.value.slice(ta.selectionEnd);
-      ta.selectionStart = ta.selectionEnd = s + 2;
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      textarea.value = `${textarea.value.slice(0, start)}  ${textarea.value.slice(end)}`;
+      textarea.selectionStart = textarea.selectionEnd = start + 2;
     }
   });
 
   const controls = document.createElement("div");
   controls.id = "editor-controls";
-
-  const btnExec = mkBtn("[ EXÉCUTER ]");
-  const btnReset = mkBtn("[ RESET ]");
-  const btnBack = mkBtn("[ RETOUR ]");
+  const executeButton = makeButton("[ EXÉCUTER ]");
+  const resetButton = makeButton("[ RESET ]");
+  const backButton = makeButton("[ RETOUR ]");
   const status = document.createElement("span");
   status.id = "exec-status";
 
-  btnExec.addEventListener("click", () => {
+  executeButton.addEventListener("click", () => {
     unlockAudio();
-    if (file.validate(ta.value)) {
-      playSound(sndGood);
+    if (gameOver || gameWon) return;
+
+    if (file.validate(textarea.value)) {
+      playSound(sndGood, VOLUME.success);
       status.textContent = "✓ VALIDÉ";
       status.className = "ok";
-      ta.disabled = true;
-      btnExec.disabled = true;
-      typeText(file.solution);
+      textarea.disabled = true;
+      executeButton.disabled = true;
       fixedFiles[fileId] = true;
-      changeIntegrity(+25);
-    } else {
-      // --- SON BUG IMMÉDIAT ---
-      sndBug.currentTime = 0; // Remet à zéro
-      sndBug.play().catch(() => {}); // Joue instantanément sans cloner
+      typeText(file.solution);
+      changeIntegrity(REPAIR_REWARD);
 
+      if (!gameOver && checkAllFixed()) triggerWin();
+    } else {
+      playSound(sndBug, VOLUME.error);
       status.textContent = "✗ INVALIDE";
       status.className = "err";
-      typeText("Mauvaise correction. Réessaie.");
-      changeIntegrity(-50);
+      typeText("Correction incorrecte. Réessaie.");
+      changeIntegrity(-ERROR_PENALTY);
     }
   });
 
-  btnReset.addEventListener("click", () => {
-    unlockAudio(); // AUDIO
-    playSound(sndEnter); // AUDIO
-    ta.disabled = false;
-    btnExec.disabled = false;
-    ta.value = file.code;
+  resetButton.addEventListener("click", () => {
+    unlockAudio();
+    if (gameOver || gameWon) return;
+    playSound(sndEnter, VOLUME.normal);
+    textarea.disabled = false;
+    executeButton.disabled = false;
+    textarea.value = file.code;
     status.textContent = "";
     status.className = "";
   });
 
-  btnBack.addEventListener("click", () => {
-    unlockAudio(); // AUDIO
-    playSound(sndEnter); // AUDIO
-    breadcrumb.textContent = buildPath();
+  backButton.addEventListener("click", () => {
+    unlockAudio();
+    if (gameOver || gameWon) return;
+    playSound(sndEnter, VOLUME.normal);
     renderList();
     typeText("...");
   });
 
-  controls.append(btnExec, btnReset, btnBack, status);
-  view.append(fname, ta, controls);
+  controls.append(executeButton, resetButton, backButton, status);
+  view.append(filename, textarea, controls);
   screenEl.appendChild(view);
 }
 
-function mkBtn(label) {
-  const b = document.createElement("button");
-  b.className = "term-btn";
-  b.textContent = label;
-  b.addEventListener("mouseenter", playHover); // AUDIO
-  return b;
+function makeButton(label) {
+  const button = document.createElement("button");
+  button.className = "term-btn";
+  button.textContent = label;
+  button.addEventListener("mouseenter", playHover);
+  return button;
 }
 
-// ── HACKER INTRO SEQUENCE ──────────────────────────────────────────
+// ── INTRO DU HACKER ───────────────────────────────────────────────────
 function triggerHackerIntro() {
-  // 1. Cacher les éléments UI et bloquer la souris
+  if (introRunning || gameOver || gameWon) return;
+  introRunning = true;
+  const currentSession = sessionID;
+
   hackerLine.style.display = "none";
   breadcrumb.style.display = "none";
-  screenEl.style.pointerEvents = "none"; // Désactive les clics/survols
-
+  screenEl.style.pointerEvents = "none";
   screenEl.innerHTML = "";
   breadcrumb.textContent = "";
 
-  const introOverlay = document.createElement("div");
-  introOverlay.id = "overlay-msg";
-
-  const bigMsg = document.createElement("div");
-  bigMsg.className = "big-msg red-alert"; // <-- 2. Utilise la couleur ROUGE
-  bigMsg.textContent = "// INTRUSION TERMINAL_RAIDER //";
-
+  const overlay = document.createElement("div");
+  overlay.id = "overlay-msg";
+  const title = document.createElement("div");
+  title.className = "big-msg red-alert";
+  title.textContent = "// INTRUSION TERMINAL_RAIDER //";
   const speech = document.createElement("div");
   speech.className = "hacker-speech";
-
-  introOverlay.append(bigMsg, speech);
-  crtScreen.appendChild(introOverlay);
+  overlay.append(title, speech);
+  crtScreen.appendChild(overlay);
 
   const dialogues = [
     "Un nouvel administrateur ? Pitoyable.",
     "Tes systèmes de sécurité sont obsolètes.",
     "Laisse-moi faire un peu de ménage dans tes fichiers...",
   ];
-
   let step = 0;
+
   function nextDialogue() {
+    if (sessionID !== currentSession || !overlay.isConnected) return;
+
     if (step < dialogues.length) {
       glitch();
-      playSound(sndBug);
-      speech.innerHTML += `<br>> ${dialogues[step]}`;
-
-      integrity -= 26;
-      renderIntegrity();
-
-      step++;
-      setTimeout(nextDialogue, 3000);
-    } else {
-      glitch();
-      setTimeout(() => {
-        introOverlay.remove();
-        integrity = 20;
-        renderIntegrity();
-        gameOver = false;
-
-        // 3. Réactiver l'UI et la souris
-        hackerLine.style.display = "block";
-        breadcrumb.style.display = "block";
-        screenEl.style.pointerEvents = "auto";
-
-        // 4. Forcer les 2 prochains glitchs au clic
-        window.GLITCH_CONFIG.triggerReverse = true;
-        window.GLITCH_CONFIG.triggerSwap = true;
-
-        renderList();
-        typeText("SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.");
-      }, 2000);
+      playSound(sndBug, VOLUME.bug);
+      const line = document.createElement("div");
+      line.textContent = `> ${dialogues[step]}`;
+      speech.appendChild(line);
+      // L'introduction est désormais purement scénaristique : elle ne retire plus d'intégrité.
+      step += 1;
+      setTimeout(nextDialogue, 2500);
+      return;
     }
-  }
-  setTimeout(nextDialogue, 1000);
-}
 
-// ── GAME OVER ───────────────────────────────────────────────────────
-function triggerGameOver() {
-  gameOver = true;
-  playSound(sndBad);
-
-  const currentSession = sessionID; // Fix pour stopper la séquence en cas de reset
-
-  crtScreen.classList.add("glitching");
-
-  const allItems = screenEl.querySelectorAll("li, div, textarea");
-  let delay = 200;
-  allItems.forEach((el) => {
+    glitch();
     setTimeout(() => {
       if (sessionID !== currentSession) return;
-      el.classList.add("deleting");
+      overlay.remove();
+      introRunning = false;
+      integrity = 100;
+      renderIntegrity();
+      gameOver = false;
+      gameWon = false;
+
+      hackerLine.style.display = "block";
+      breadcrumb.style.display = "block";
+      screenEl.style.pointerEvents = "auto";
+
+      GLITCH_CONFIG.triggerReverse = true;
+      GLITCH_CONFIG.triggerSwap = true;
+      renderList();
+      typeText("SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.");
+    }, 1200);
+  }
+
+  setTimeout(nextDialogue, 700);
+}
+
+// ── FIN DE PARTIE : DÉFAITE ────────────────────────────────────────────
+function triggerGameOver() {
+  if (gameOver || gameWon) return;
+  gameOver = true;
+  introRunning = false;
+  cancelTyping();
+  playSound(sndBad, VOLUME.error);
+
+  const currentSession = sessionID;
+  crtScreen.classList.add("glitching");
+  const items = screenEl.querySelectorAll("li, div, textarea, button");
+  let delay = 100;
+  items.forEach((item) => {
+    setTimeout(() => {
+      if (sessionID !== currentSession) return;
+      item.classList.add("deleting");
     }, delay);
-    delay += 120;
+    delay += 70;
   });
 
   setTimeout(() => {
@@ -555,140 +510,200 @@ function triggerGameOver() {
     crtScreen.classList.remove("glitching");
     screenEl.innerHTML = "";
     breadcrumb.textContent = "";
-    integrityEl.textContent = "INTÉGRITÉ [░░░░░░░░░░] 0%";
+    integrity = 0;
+    renderIntegrity();
 
-    const overlay = document.createElement("div");
-    overlay.id = "overlay-msg";
-
-    const bigMsg = document.createElement("div");
-    bigMsg.className = "big-msg red-alert";
-    bigMsg.textContent = "// SYSTÈME COMPROMIS //";
-
-    const speech = document.createElement("div");
-    speech.className = "hacker-speech";
-    speech.innerHTML = `
-      rm -rf /* en cours...<br><br>
-      Tu étais trop lent.<br>
-      Tous tes fichiers appartiennent à GHOST_CORE maintenant.<br><br>
-      <span style="opacity:0.5">[ Appuie sur POWER pour recommencer ]</span>
-    `;
-    const scanLine = document.createElement("div");
-    scanLine.className = "scan-line";
-    scanLine.style.top = "50%";
-
-    overlay.append(scanLine, bigMsg, speech);
+    const overlay = makeEndOverlay(
+      "// SYSTÈME COMPROMIS //",
+      [
+        "rm -rf /* en cours...",
+        "Tu étais trop lent.",
+        "Tous tes fichiers appartiennent à GHOST_CORE maintenant.",
+        "[ Appuie sur POWER pour recommencer ]",
+      ],
+    );
     crtScreen.appendChild(overlay);
     hackerLine.textContent = "";
-  }, delay + 1500);
+  }, delay + 700);
 }
 
-// ── REBOOT ──────────────────────────────────────────────────────────
+// ── FIN DE PARTIE : VICTOIRE ───────────────────────────────────────────
+function triggerWin() {
+  if (gameOver || gameWon) return;
+  gameWon = true;
+  cancelTyping();
+  playSound(sndGood, VOLUME.success);
+  screenEl.innerHTML = "";
+  breadcrumb.textContent = "";
+
+  const overlay = makeEndOverlay(
+    "// SYSTÈME RESTAURÉ //",
+    [
+      "Tous les fichiers corrompus ont été réparés.",
+      "Intégrité du système : restaurée.",
+      "[ Appuie sur POWER pour recommencer ]",
+    ],
+  );
+  crtScreen.appendChild(overlay);
+  hackerLine.textContent = "";
+}
+
+function makeEndOverlay(titleText, messages) {
+  const overlay = document.createElement("div");
+  overlay.id = "overlay-msg";
+  const scanLine = document.createElement("div");
+  scanLine.className = "scan-line";
+  scanLine.style.top = "50%";
+  const title = document.createElement("div");
+  title.className = "big-msg red-alert";
+  title.textContent = titleText;
+  const speech = document.createElement("div");
+  speech.className = "hacker-speech";
+  messages.forEach((message, index) => {
+    const line = document.createElement("div");
+    line.textContent = message;
+    if (index === messages.length - 1) line.style.opacity = "0.65";
+    speech.appendChild(line);
+  });
+  overlay.append(scanLine, title, speech);
+  return overlay;
+}
+
+// ── REBOOT ─────────────────────────────────────────────────────────────
 function triggerReboot() {
   if (document.getElementById("reboot-screen")) return;
-  sessionID++;
+
+  sessionID += 1;
   const currentSession = sessionID;
-
+  introRunning = false;
   sndBackground.pause();
+  cancelTyping();
+  document.getElementById("overlay-msg")?.remove();
 
-  const ol = document.getElementById("overlay-msg");
-  if (ol) ol.remove();
-
-  const rb = document.createElement("div");
-  rb.id = "reboot-screen";
+  const rebootScreen = document.createElement("div");
+  rebootScreen.id = "reboot-screen";
   const title = document.createElement("div");
   title.className = "rb-title";
   title.textContent = "ROBCO INDUSTRIES";
-
-  const line1 = document.createElement("div");
-  line1.className = "rb-line";
-  line1.textContent = "REBOOTING TERMLINK...";
-
-  const line2 = document.createElement("div");
-  line2.className = "rb-line";
-  line2.style.animationDelay = "0.4s";
-  line2.textContent = "CLEARING MEMORY BANKS...";
-
-  const line3 = document.createElement("div");
-  line3.className = "rb-line";
-  line3.style.animationDelay = "0.8s";
-  line3.textContent = "REINITIALIZING...";
-
-  rb.append(title, line1, line2, line3);
-  crtScreen.appendChild(rb);
+  const lines = [
+    "REBOOTING TERMLINK...",
+    "CLEARING MEMORY BANKS...",
+    "REINITIALIZING...",
+  ];
+  rebootScreen.appendChild(title);
+  lines.forEach((message, index) => {
+    const line = document.createElement("div");
+    line.className = "rb-line";
+    line.style.animationDelay = `${index * 0.4}s`;
+    line.textContent = message;
+    rebootScreen.appendChild(line);
+  });
+  crtScreen.appendChild(rebootScreen);
 
   setTimeout(() => {
     if (sessionID !== currentSession) return;
-    rb.remove();
+    rebootScreen.remove();
     resetGame();
-  }, 2500);
+  }, 2200);
 }
 
-// ── RESET ───────────────────────────────────────────────────────────
+// ── RESET DU JEU ───────────────────────────────────────────────────────
 function resetGame() {
-  sessionID++;
-  playSound(sndPowerOn);
+  sessionID += 1;
+  cancelTyping();
+  playSound(sndPowerOn, VOLUME.power);
+  if (audioUnlocked) {
+    sndBackground.volume = VOLUME.background;
+    sndBackground.play().catch(() => {});
+  }
 
-  if (audioUnlocked) sndBackground.play().catch(() => {});
-
-  // Nettoyage de l'UI
   crtScreen.classList.remove("glitching");
-  const ol = document.getElementById("overlay-msg");
-  if (ol) ol.remove();
-  const deletingItems = screenEl.querySelectorAll(".deleting");
-  deletingItems.forEach((el) => el.classList.remove("deleting"));
+  document.getElementById("overlay-msg")?.remove();
+  document.getElementById("reboot-screen")?.remove();
+  screenEl.querySelectorAll(".deleting").forEach((item) => item.classList.remove("deleting"));
 
   navStack = [];
-  curNodes = FILE_SYSTEM;
-  integrity = 100; // 1. On démarre bien à 100%
+  gameFileSystem = structuredClone(FILE_SYSTEM);
+  curNodes = gameFileSystem;
+  integrity = 100;
   selectedIdx = 0;
+  gameOver = false;
+  gameWon = false;
+  introRunning = false;
+  for (const key of Object.keys(fixedFiles)) delete fixedFiles[key];
+  GLITCH_CONFIG.triggerReverse = false;
+  GLITCH_CONFIG.triggerSwap = false;
 
-  gameOver = true; // 2. ON BLOQUE LE CLAVIER PENDANT LES 3 SECONDES
-
-  for (const k in fixedFiles) delete fixedFiles[k];
-
+  hackerLine.style.display = "block";
+  breadcrumb.style.display = "block";
+  screenEl.style.pointerEvents = "auto";
   renderIntegrity();
   renderList();
   typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
 
-  // 3. On déclenche l'attaque du Hacker après 3 secondes pile
+  const currentSession = sessionID;
   setTimeout(() => {
-    triggerHackerIntro();
-  }, 3000);
+    if (sessionID === currentSession) triggerHackerIntro();
+  }, INTRO_DELAY);
 }
 
-// ── POWER BUTTON ────────────────────────────────────────────────────
-let started = false;
+// ── CLAVIER ────────────────────────────────────────────────────────────
+document.addEventListener("keydown", (event) => {
+  unlockAudio();
+  if (gameOver || gameWon || introRunning) return;
+  if (!screenEl.querySelector("#file-list")) return;
 
-document.getElementById("power-btn").addEventListener("click", () => {
+  const total = curNodes.length + (navStack.length > 0 ? 1 : 0);
+  if (total === 0) return;
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    selectedIdx = (selectedIdx + 1) % total;
+    refreshSelected();
+    scrollSelectedIntoView();
+    updateHoverFromSelected();
+    playNav();
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    selectedIdx = (selectedIdx - 1 + total) % total;
+    refreshSelected();
+    scrollSelectedIntoView();
+    updateHoverFromSelected();
+    playNav();
+  } else if (event.key === "Enter" || event.key === "ArrowRight") {
+    event.preventDefault();
+    if (selectedIdx < curNodes.length) {
+      activateNode(curNodes[selectedIdx], selectedIdx);
+    } else if (navStack.length > 0) {
+      goBack();
+    }
+  } else if (event.key === "ArrowLeft" || event.key === "Backspace") {
+    event.preventDefault();
+    goBack();
+  }
+});
+
+// ── BOUTON POWER ───────────────────────────────────────────────────────
+powerButton.addEventListener("click", () => {
   unlockAudio();
 
   if (!started) {
     started = true;
-
-    // 1. Supprime ou masque l'écran de démarrage
-    const startScreen = document.getElementById("start-screen");
-    if (startScreen) {
-      startScreen.style.display = "none"; // On le cache
-    }
-
-    // 2. Affiche l'interface du terminal
-    const ui = document.querySelector(".terminal-inner-ui");
-    if (ui) {
-      ui.style.setProperty("display", "flex", "important"); // On force l'affichage
-    }
-
-    // 3. Lance la séquence de boot
-    playSound(sndPowerOn);
+    document.getElementById("start-screen")?.style.setProperty("display", "none");
+    document.querySelector(".terminal-inner-ui")?.style.setProperty("display", "flex", "important");
+    playSound(sndPowerOn, VOLUME.power);
     resetGame();
     return;
   }
 
-  // Si déjà démarré, le bouton Power sert de reboot
-  playSound(sndPowerOff);
+  playSound(sndPowerOff, VOLUME.power);
   triggerReboot();
 });
 
-// ── UTILS ───────────────────────────────────────────────────────────
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+// ── UTILITAIRE ─────────────────────────────────────────────────────────
+function pick(items) {
+  return items[Math.floor(Math.random() * items.length)];
 }
+
+// Affiche immédiatement la valeur initiale, même avant le premier redémarrage.
+renderIntegrity();
