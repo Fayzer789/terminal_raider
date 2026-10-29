@@ -29,6 +29,28 @@ export const CLEAN_REPLIES = [
   "Coup pour rien.",
 ];
 
+export const CLEAN_REPLIES_EN = [
+  "Not here...",
+  "Nothing here.",
+  "Clean file.",
+  "False lead.",
+  "Too obvious.",
+  "Nope. Keep looking.",
+  "Haha. No.",
+  "Clean. Too clean.",
+  "Only weird names.",
+  "Waste of time.",
+  "I'm watching you...",
+  "Empty.",
+  "Error 404: talent not found.",
+  "Nothing useful.",
+  "Wrong file.",
+  "0 bytes of interest.",
+  "Lost?",
+  "Try the other one.",
+  "Nothing to see here.",
+];
+
 // Réponses affichées lorsqu'un dossier est ouvert.
 export const DIR_REPLIES = [
   "Intéressant... regarde là.",
@@ -58,6 +80,34 @@ export const DIR_REPLIES = [
   "Pas par là.",
 ];
 
+export const DIR_REPLIES_EN = [
+  "Interesting... look there.",
+  "Maybe this way.",
+  "Keep searching.",
+  "This folder... dig deeper.",
+  "Getting warmer... colder.",
+  "Open it. See for yourself.",
+  "It goes deep, doesn't it?",
+  "You're going deeper.",
+  "The path continues.",
+  "Look behind you.",
+  "Empty. Or is it?",
+  "Curious, isn't it?",
+  "Keep digging.",
+  "Nothing... for now.",
+  "It's a maze.",
+  "Lost in the folders?",
+  "This way.",
+  "You're getting close.",
+  "It's dark in here.",
+  "Wrong way.",
+  "Turn back.",
+  "Hide and seek.",
+  "Are you scared?",
+  "Locked?",
+  "Not this way.",
+];
+
 // Les validateurs sont volontairement simples : ce mini-jeu vérifie des corrections
 // plausibles, il ne remplace pas un véritable analyseur de code.
 function stripComments(code) {
@@ -69,87 +119,78 @@ function stripComments(code) {
 export const CORRUPTED_FILES = {
   "ghost_var.js": {
     name: "ghost_var.js",
-    code: `// Corrigez la déclaration de variable
-function saluer(nom) {
-  message = "Accès autorisé, " + nom;
-  return message;
-}`,
-    reply: "Variable globale non déclarée. Fuite mémoire détectée.",
-    solution: "Variable déclarée. Fuite colmatée.",
+    code: `# Ajoutez la variable message avant return
+def saluer(nom):
+    return message`,
+    codeEn: `# Add the message variable before return
+  def greet(name):
+    return message`,
+    reply: "La variable message doit être créée avant de l'utiliser.",
+    replyEn: "The message variable must be created before it is used.",
+    solution: "Variable Python corrigée.",
+    solutionEn: "Python variable fixed.",
     validate: (code) => {
       const source = stripComments(code);
       return (
-        /\b(?:let|const|var)\s+message\s*=/.test(source) &&
-        /return\s+message\s*;/.test(source)
+        /\bmessage\s*=/.test(source) &&
+        /\breturn\s+message\b/.test(source)
       );
     },
   },
 
   "inf_loop.sh": {
     name: "inf_loop.sh",
-    code: `// Boucle potentiellement infinie : modifiez n ou ajoutez une sortie.
-function bouboucle(n) {
-  while (n == 1) {
-    console.log(n);
-  }
-}`,
-    reply: "Attention, boucle infinie ! Le CPU va fondre.",
-    solution: "Boucle stabilisée. Température CPU normale.",
+    code: `# Ajoutez une ligne pour faire avancer la boucle
+n = 0
+while n < 3:
+    print(n)`,
+    codeEn: `# Add a line to move the loop forward
+  n = 0
+  while n < 3:
+    print(n)`,
+    reply: "Attention, cette boucle Python ne progresse pas.",
+    replyEn: "Warning: this Python loop never moves forward.",
+    solution: "Boucle Python corrigée.",
+    solutionEn: "Python loop fixed.",
     validate: (code) => {
       const source = stripComments(code);
-      return (
-        /\bbreak\s*;?/.test(source) ||
-        /\bn\s*(?:\+\+|--)/.test(source) ||
-        /\bn\s*(?:\+=|-=)\s*\d+/.test(source) ||
-        /\bn\s*=\s*(?:0|n\s*[+-]\s*\d+)/.test(source)
-      );
+      return /\bn\s*(?:\+=|-=)\s*\d+/.test(source);
     },
   },
 
   "scope_err.sys": {
     name: "scope_err.sys",
-    code: `// Problème de portée (scope)
-function scope() {
-  let x = 5;
-}
-console.log(x);`,
-    reply: "Erreur de portée (scope). La variable x est inaccessible ici.",
-    solution: "Portée corrigée. L'accès mémoire est rétabli.",
+    code: `# Placez print dans la fonction
+def afficher_nombre():
+    nombre = 5
+print(nombre)`,
+    codeEn: `# Put print inside the function
+  def show_number():
+    number = 5
+print(number)`,
+    reply: "Erreur de portée : nombre n'est pas accessible ici.",
+    replyEn: "Scope error: number is not accessible here.",
+    solution: "Portée Python corrigée.",
+    solutionEn: "Python scope fixed.",
     validate: (code) => {
       const source = stripComments(code);
-      const functionMatch = source.match(
-        /function\s+scope\s*\(\s*\)\s*\{([\s\S]*?)\}/,
-      );
-      const functionBody = functionMatch?.[1] ?? "";
-      const declarationInside = /\blet\s+x\s*=\s*5\s*;/.test(functionBody);
-      const logInside = /console\s*\.\s*log\s*\(\s*x\s*\)\s*;/.test(functionBody);
-
-      // Solution 1 : déclarer x et l'utiliser dans la même fonction.
-      if (declarationInside && logInside) return true;
-
-      // Solution 2 : déclarer x à l'extérieur de la fonction.
-      const declarationIndex = source.search(/\b(?:let|const|var)\s+x\s*=\s*5\s*;/);
-      const functionIndex = source.search(/function\s+scope\s*\(/);
-      const logIndex = source.search(/console\s*\.\s*log\s*\(\s*x\s*\)\s*;/);
-
-      return (
-        declarationIndex >= 0 &&
-        functionIndex >= 0 &&
-        declarationIndex < functionIndex &&
-        logIndex >= 0
-      );
+      return /def\s+(?:afficher_nombre|show_number)\s*\(\s*\)\s*:\s*\n(?:[ \t]+[^\n]*\n)*[ \t]+print\s*\(\s*(?:nombre|number)\s*\)/.test(source);
     },
   },
 
   "typo_log.bin": {
     name: "typo_log.bin",
-    code: `// Il manque une lettre
-function unPtitTrucEnMoins(x) {
-  console.lg(x);
-}`,
-    reply: "Erreur de syntaxe. Une fonction système est mal orthographiée.",
-    solution: "Syntaxe corrigée. Affichage système opérationnel.",
-    validate: (code) => /console\s*\.\s*log\s*\(\s*x\s*\)/.test(stripComments(code)),
+    code: `# Corrigez le nom de la fonction
+def afficher(message):
+    print(messagee)`,
+    codeEn: `# Fix the variable name
+  def show(message):
+    print(messagee)`,
+    reply: "Erreur Python : le nom de la variable est mal écrit.",
+    replyEn: "Python error: the variable name is misspelled.",
+    solution: "Syntaxe Python corrigée.",
+    solutionEn: "Python syntax fixed.",
+    validate: (code) => /\bprint\s*\(\s*message\s*\)/.test(stripComments(code)),
   },
 };
 

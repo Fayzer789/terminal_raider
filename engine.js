@@ -1,6 +1,8 @@
 import {
   CLEAN_REPLIES,
+  CLEAN_REPLIES_EN,
   DIR_REPLIES,
+  DIR_REPLIES_EN,
   CORRUPTED_FILES,
   FILE_SYSTEM,
   GLITCH_CONFIG,
@@ -70,6 +72,13 @@ function playNav() {
   playSound(sound, VOLUME.navigation);
 }
 
+function playLanguageKey() {
+  const sound = keySounds[0].cloneNode(true);
+  sound.volume = VOLUME.navigation;
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
+}
+
 function playHover() {
   playSound(keySounds[0], VOLUME.hover);
 }
@@ -82,6 +91,11 @@ const integrityEl = document.getElementById("integrity-bar");
 const breadcrumb = document.getElementById("breadcrumb");
 const crtScreen = document.querySelector(".crt-screen");
 const powerButton = document.getElementById("power-btn");
+const startSub = document.getElementById("start-sub");
+const startHint = document.getElementById("start-hint");
+const headerTitle = document.getElementById("header-title");
+const languageFrButton = document.getElementById("language-fr");
+const languageEnButton = document.getElementById("language-en");
 
 if (!hackerLine || !screenEl || !hoverName || !integrityEl || !breadcrumb || !crtScreen || !powerButton) {
   throw new Error("ROBCO TERMLINK : un ou plusieurs éléments HTML requis sont manquants.");
@@ -99,12 +113,147 @@ let started = false;
 let typingTimer = null;
 let sessionID = 0;
 let introRunning = false;
+let language = "fr";
 const fixedFiles = Object.create(null);
 
 const TYPING_SPEED = 45;
 const INTRO_DELAY = 3000;
 const ERROR_PENALTY = 25;
 const REPAIR_REWARD = 15;
+
+const UI_TEXT = {
+  fr: {
+    header: "ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL",
+    startSub: "Choisissez votre langue",
+    startHint: "Appuyez sur POWER pour démarrer",
+    integrity: "INTÉGRITÉ",
+    back: "[ retour ]",
+    reverseError: "ERREUR : index de fichier corrompu...",
+    swapError: "ERREUR : décalage du secteur mémoire...",
+    missingFile: "ERREUR : fichier de correction introuvable.",
+    correctionRequired: "CORRECTION REQUISE",
+    execute: "[ EXÉCUTER ]",
+    reset: "[ RESET ]",
+    return: "[ RETOUR ]",
+    valid: "✓ VALIDÉ",
+    invalid: "✗ INVALIDE",
+    retry: "Correction incorrecte. Réessaie.",
+    introTitle: "// INTRUSION TERMINAL_RAIDER //",
+    intro: [
+      "Un nouvel administrateur ? Pitoyable.",
+      "Tes systèmes de sécurité sont obsolètes.",
+      "Laisse-moi faire un peu de ménage dans tes fichiers...",
+    ],
+    compromised: "SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.",
+    gameOverTitle: "// SYSTÈME COMPROMIS //",
+    gameOver: [
+      "rm -rf /* en cours...",
+      "Tu étais trop lent.",
+      "Tous tes fichiers appartiennent à GHOST_CORE maintenant.",
+      "[ Appuie sur POWER pour recommencer ]",
+    ],
+    reboot: ["REBOOTING TERMLINK...", "CLEARING MEMORY BANKS...", "REINITIALIZING..."],
+    victorySubtitle: "TERMLINK // PROTOCOLE DE RÉCUPÉRATION",
+    progressStart: "INITIALISATION DU PROTOCOLE...",
+    progress: "RÉPARATION DU SYSTÈME",
+    progressDone: "RÉCUPÉRATION TERMINÉE : 100 %",
+    restored: "// SYSTÈME RESTAURÉ //",
+    restart: "[ APPUIE SUR POWER POUR RECOMMENCER ]",
+    victoryLogs: [
+      "INITIALISATION DU PROTOCOLE ROBCO...",
+      "AUTHENTIFICATION OPÉRATEUR ........ OK",
+      "ISOLATION DES CONNEXIONS EXTERNES .. OK",
+      "ANALYSE DE LA MÉMOIRE SYSTÈME ...... TERMINÉE",
+      "RECHERCHE DES ANOMALIES ............ TERMINÉE",
+      "PATCH DE ghost_var.js .............. OK",
+      "CORRECTION DE inf_loop.sh .......... OK",
+      "RÉPARATION DE scope_err.sys ........ OK",
+      "RECONSTRUCTION DE typo_log.bin ..... OK",
+      "VÉRIFICATION DES SOMMES DE CONTRÔLE . PASS",
+      "PURGE DES TRACES GHOST_CORE ......... TERMINÉE",
+      "RESTAURATION DES PERMISSIONS ........ OK",
+      "RECONSTRUCTION DE L'INDEX ........... OK",
+      "TEST D'INTÉGRITÉ FINAL .............. PASS",
+      "VÉRIFICATION DES SECTEURS ........... 4/4",
+      "STATUT DE SÉCURITÉ ................. NOMINAL",
+      "TOUS LES SECTEURS SONT SÉCURISÉS.",
+    ],
+  },
+  en: {
+    header: "ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL",
+    startSub: "Choose your language",
+    startHint: "Press POWER to start",
+    integrity: "INTEGRITY",
+    back: "[ back ]",
+    reverseError: "ERROR: corrupted file index...",
+    swapError: "ERROR: memory sector shift...",
+    missingFile: "ERROR: repair file not found.",
+    correctionRequired: "REPAIR REQUIRED",
+    execute: "[ EXECUTE ]",
+    reset: "[ RESET ]",
+    return: "[ BACK ]",
+    valid: "✓ VALID",
+    invalid: "✗ INVALID",
+    retry: "Incorrect fix. Try again.",
+    introTitle: "// TERMINAL_RAIDER INTRUSION //",
+    intro: [
+      "A new administrator? Pathetic.",
+      "Your security systems are obsolete.",
+      "Let me clean up your files...",
+    ],
+    compromised: "SYSTEM COMPROMISED. PLEASE REPAIR THE FILES.",
+    gameOverTitle: "// SYSTEM COMPROMISED //",
+    gameOver: [
+      "rm -rf /* in progress...",
+      "You were too slow.",
+      "All your files belong to GHOST_CORE now.",
+      "[ Press POWER to restart ]",
+    ],
+    reboot: ["REBOOTING TERMLINK...", "CLEARING MEMORY BANKS...", "REINITIALIZING..."],
+    victorySubtitle: "TERMLINK // RECOVERY PROTOCOL",
+    progressStart: "INITIALIZING PROTOCOL...",
+    progress: "SYSTEM RECOVERY",
+    progressDone: "RECOVERY COMPLETE: 100%",
+    restored: "// SYSTEM RESTORED //",
+    restart: "[ PRESS POWER TO RESTART ]",
+    victoryLogs: [
+      "INITIALIZING ROBCO PROTOCOL...",
+      "OPERATOR AUTHENTICATION ........ OK",
+      "ISOLATING EXTERNAL CONNECTIONS .. OK",
+      "ANALYZING SYSTEM MEMORY ......... COMPLETE",
+      "SEARCHING FOR ANOMALIES ......... COMPLETE",
+      "PATCHING ghost_var.js ........... OK",
+      "FIXING inf_loop.sh .............. OK",
+      "REPAIRING scope_err.sys ......... OK",
+      "REBUILDING typo_log.bin ......... OK",
+      "VERIFYING CHECKSUMS ............. PASS",
+      "PURGING GHOST_CORE TRACES ....... COMPLETE",
+      "RESTORING PERMISSIONS ........... OK",
+      "REBUILDING INDEX ................ OK",
+      "FINAL INTEGRITY TEST ............ PASS",
+      "VERIFYING SECTORS ............... 4/4",
+      "SECURITY STATUS ................. NOMINAL",
+      "ALL SECTORS SECURED.",
+    ],
+  },
+};
+
+function text(key) {
+  return UI_TEXT[language][key];
+}
+
+function localizedFileText(file, key) {
+  return language === "en" ? file[`${key}En`] ?? file[key] : file[key];
+}
+
+function applyLanguage() {
+  document.documentElement.lang = language;
+  headerTitle.textContent = text("header");
+  startSub.textContent = text("startSub");
+  startHint.textContent = text("startHint");
+  languageFrButton.classList.toggle("selected", language === "fr");
+  languageEnButton.classList.toggle("selected", language === "en");
+}
 
 // ── TEXTE ──────────────────────────────────────────────────────────────
 function typeText(text) {
@@ -141,7 +290,7 @@ function renderIntegrity() {
   const barCount = 10;
   const safeIntegrity = Math.max(0, Math.min(100, integrity));
   const filledBars = Math.round((safeIntegrity / 100) * barCount);
-  integrityEl.textContent = `INTÉGRITÉ [${"█".repeat(filledBars)}${"░".repeat(barCount - filledBars)}] ${safeIntegrity}%`;
+  integrityEl.textContent = `${text("integrity")} [${"█".repeat(filledBars)}${"░".repeat(barCount - filledBars)}] ${safeIntegrity}%`;
 }
 
 function fixedCount() {
@@ -217,7 +366,7 @@ function renderList() {
     if (selectedIdx === backIndex) backItem.classList.add("selected");
 
     backItem.addEventListener("mouseenter", () => {
-      hoverName.textContent = "[ retour ]";
+      hoverName.textContent = text("back");
       selectedIdx = backIndex;
       refreshSelected();
       playHover();
@@ -251,7 +400,7 @@ function updateHoverFromSelected() {
     const node = curNodes[selectedIdx];
     hoverName.textContent = node.type === "dir" ? `${node.name}/` : node.name;
   } else {
-    hoverName.textContent = "[ retour ]";
+    hoverName.textContent = text("back");
   }
 }
 
@@ -265,7 +414,7 @@ function activateNode(node, index) {
     renderList();
     glitch();
     playSound(sndBug, VOLUME.bug);
-    typeText("ERREUR : index de fichier corrompu...");
+    typeText(text("reverseError"));
     return;
   }
 
@@ -278,7 +427,7 @@ function activateNode(node, index) {
     renderList();
     glitch();
     playSound(sndBug, VOLUME.bug);
-    typeText("ERREUR : décalage du secteur mémoire...");
+    typeText(text("swapError"));
     return;
   }
   GLITCH_CONFIG.triggerSwap = false;
@@ -289,7 +438,7 @@ function activateNode(node, index) {
     curNodes = node.children;
     selectedIdx = 0;
     renderList();
-    typeText(pick(DIR_REPLIES));
+    typeText(pick(language === "en" ? DIR_REPLIES_EN : DIR_REPLIES));
     return;
   }
 
@@ -300,7 +449,7 @@ function activateNode(node, index) {
   }
 
   playSound(sndBad, VOLUME.error);
-  typeText(pick(CLEAN_REPLIES));
+  typeText(pick(language === "en" ? CLEAN_REPLIES_EN : CLEAN_REPLIES));
 }
 
 function goBack() {
@@ -318,13 +467,13 @@ function openEditor(fileId) {
   glitch();
   const file = CORRUPTED_FILES[fileId];
   if (!file) {
-    typeText("ERREUR : fichier de correction introuvable.");
+    typeText(text("missingFile"));
     return;
   }
 
-  typeText(file.reply);
+  typeText(localizedFileText(file, "reply"));
   screenEl.innerHTML = "";
-  breadcrumb.textContent = `${buildPath()}${file.name} — CORRECTION REQUISE`;
+  breadcrumb.textContent = `${buildPath()}${file.name} — ${text("correctionRequired")}`;
 
   const view = document.createElement("div");
   view.id = "editor-view";
@@ -336,7 +485,7 @@ function openEditor(fileId) {
   const textarea = document.createElement("textarea");
   textarea.id = "code-editor";
   textarea.spellcheck = false;
-  textarea.value = file.code;
+  textarea.value = localizedFileText(file, "code");
 
   textarea.addEventListener("keydown", (event) => {
     unlockAudio();
@@ -355,9 +504,9 @@ function openEditor(fileId) {
 
   const controls = document.createElement("div");
   controls.id = "editor-controls";
-  const executeButton = makeButton("[ EXÉCUTER ]");
-  const resetButton = makeButton("[ RESET ]");
-  const backButton = makeButton("[ RETOUR ]");
+  const executeButton = makeButton(text("execute"));
+  const resetButton = makeButton(text("reset"));
+  const backButton = makeButton(text("return"));
   const status = document.createElement("span");
   status.id = "exec-status";
 
@@ -367,20 +516,20 @@ function openEditor(fileId) {
 
     if (file.validate(textarea.value)) {
       playSound(sndGood, VOLUME.success);
-      status.textContent = "✓ VALIDÉ";
+      status.textContent = text("valid");
       status.className = "ok";
       textarea.disabled = true;
       executeButton.disabled = true;
       fixedFiles[fileId] = true;
-      typeText(file.solution);
+      typeText(localizedFileText(file, "solution"));
       changeIntegrity(REPAIR_REWARD);
 
       if (!gameOver && checkAllFixed()) triggerWin();
     } else {
       playSound(sndBug, VOLUME.error);
-      status.textContent = "✗ INVALIDE";
+      status.textContent = text("invalid");
       status.className = "err";
-      typeText("Correction incorrecte. Réessaie.");
+      typeText(text("retry"));
       changeIntegrity(-ERROR_PENALTY);
     }
   });
@@ -391,7 +540,7 @@ function openEditor(fileId) {
     playSound(sndEnter, VOLUME.normal);
     textarea.disabled = false;
     executeButton.disabled = false;
-    textarea.value = file.code;
+    textarea.value = localizedFileText(file, "code");
     status.textContent = "";
     status.className = "";
   });
@@ -433,17 +582,13 @@ function triggerHackerIntro() {
   overlay.id = "overlay-msg";
   const title = document.createElement("div");
   title.className = "big-msg red-alert";
-  title.textContent = "// INTRUSION TERMINAL_RAIDER //";
+  title.textContent = text("introTitle");
   const speech = document.createElement("div");
   speech.className = "hacker-speech";
   overlay.append(title, speech);
   crtScreen.appendChild(overlay);
 
-  const dialogues = [
-    "Un nouvel administrateur ? Pitoyable.",
-    "Tes systèmes de sécurité sont obsolètes.",
-    "Laisse-moi faire un peu de ménage dans tes fichiers...",
-  ];
+  const dialogues = text("intro");
   let step = 0;
 
   function nextDialogue() {
@@ -478,7 +623,7 @@ function triggerHackerIntro() {
       GLITCH_CONFIG.triggerReverse = true;
       GLITCH_CONFIG.triggerSwap = true;
       renderList();
-      typeText("SYSTÈME COMPROMIS. VEUILLEZ RÉPARER LES FICHIERS.");
+      typeText(text("compromised"));
     }, 1200);
   }
 
@@ -513,40 +658,126 @@ function triggerGameOver() {
     integrity = 0;
     renderIntegrity();
 
-    const overlay = makeEndOverlay(
-      "// SYSTÈME COMPROMIS //",
-      [
-        "rm -rf /* en cours...",
-        "Tu étais trop lent.",
-        "Tous tes fichiers appartiennent à GHOST_CORE maintenant.",
-        "[ Appuie sur POWER pour recommencer ]",
-      ],
-    );
+    const overlay = makeEndOverlay(text("gameOverTitle"), text("gameOver"));
     crtScreen.appendChild(overlay);
     hackerLine.textContent = "";
   }, delay + 700);
 }
 
-// ── FIN DE PARTIE : VICTOIRE ───────────────────────────────────────────
+
+ // ── FIN DE PARTIE : CINÉMATIQUE DE VICTOIRE ──────────────────
 function triggerWin() {
   if (gameOver || gameWon) return;
+
   gameWon = true;
   cancelTyping();
-  playSound(sndGood, VOLUME.success);
+
   screenEl.innerHTML = "";
   breadcrumb.textContent = "";
-
-  const overlay = makeEndOverlay(
-    "// SYSTÈME RESTAURÉ //",
-    [
-      "Tous les fichiers corrompus ont été réparés.",
-      "Intégrité du système : restaurée.",
-      "[ Appuie sur POWER pour recommencer ]",
-    ],
-  );
-  crtScreen.appendChild(overlay);
   hackerLine.textContent = "";
+
+  const makeElement = (tag, className, text = "") => {
+    const element = document.createElement(tag);
+    element.className = className;
+    element.textContent = text;
+    return element;
+  };
+
+  // Écran de cinématique
+  const overlay = makeElement("div", "robco-victory-screen");
+  overlay.setAttribute("role", "status");
+
+  const title = makeElement(
+    "div",
+    "robco-victory-title",
+    "ROBCO INDUSTRIES"
+  );
+
+  const subtitle = makeElement(
+    "div",
+    "robco-victory-subtitle",
+    text("victorySubtitle")
+  );
+
+  const logBox = makeElement("div", "robco-victory-log");
+
+  const progressLabel = makeElement(
+    "div",
+    "robco-victory-progress-label",
+    text("progressStart")
+  );
+
+  const progressTrack = makeElement("div", "robco-victory-progress-track");
+  const progressFill = makeElement("div", "robco-victory-progress-fill");
+  progressTrack.appendChild(progressFill);
+
+  const finalPanel = makeElement("div", "robco-victory-final");
+  finalPanel.style.display = "none";
+
+  finalPanel.append(
+    makeElement(
+      "div",
+      "robco-victory-final-title",
+      text("restored")
+    ),
+    makeElement(
+      "div",
+      "robco-victory-restart",
+      text("restart")
+    )
+  );
+
+  overlay.append(
+    title,
+    subtitle,
+    logBox,
+    progressLabel,
+    progressTrack,
+    finalPanel
+  );
+
+  crtScreen.appendChild(overlay);
+
+  // Lignes du terminal qui défilent pendant la réparation
+  const logs = text("victoryLogs");
+
+  let index = 0;
+
+  function runDiagnostic() {
+    // Arrête la cinématique si l'écran a été retiré lors d'un redémarrage
+    if (!overlay.isConnected) return;
+
+    if (index < logs.length) {
+      const line = makeElement(
+        "div",
+        "robco-victory-logline",
+        `[${String(index + 1).padStart(2, "0")}] ${logs[index]}`
+      );
+
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+
+      const progress = Math.round(((index + 1) / logs.length) * 100);
+      progressFill.style.width = `${progress}%`;
+      progressLabel.textContent =
+        `${text("progress")}: ${progress}%`;
+
+      index++;
+      window.setTimeout(runDiagnostic, 145);
+      return;
+    }
+
+    // Révélation finale
+    overlay.classList.add("robco-victory-complete");
+    progressLabel.textContent = text("progressDone");
+    finalPanel.style.display = "block";
+
+    playSound(sndGood, VOLUME.success);
+  }
+
+  window.setTimeout(runDiagnostic, 500);
 }
+
 
 function makeEndOverlay(titleText, messages) {
   const overlay = document.createElement("div");
@@ -585,11 +816,7 @@ function triggerReboot() {
   const title = document.createElement("div");
   title.className = "rb-title";
   title.textContent = "ROBCO INDUSTRIES";
-  const lines = [
-    "REBOOTING TERMLINK...",
-    "CLEARING MEMORY BANKS...",
-    "REINITIALIZING...",
-  ];
+  const lines = text("reboot");
   rebootScreen.appendChild(title);
   lines.forEach((message, index) => {
     const line = document.createElement("div");
@@ -639,7 +866,7 @@ function resetGame() {
   screenEl.style.pointerEvents = "auto";
   renderIntegrity();
   renderList();
-  typeText("ROBCO TERMLINK — CONNEXION ÉTABLIE");
+  typeText(language === "en" ? "ROBCO TERMLINK — CONNECTION ESTABLISHED" : "ROBCO TERMLINK — CONNEXION ÉTABLIE");
 
   const currentSession = sessionID;
   setTimeout(() => {
@@ -684,6 +911,20 @@ document.addEventListener("keydown", (event) => {
 });
 
 // ── BOUTON POWER ───────────────────────────────────────────────────────
+languageFrButton.addEventListener("click", () => {
+  if (started) return;
+  playLanguageKey();
+  language = "fr";
+  applyLanguage();
+});
+
+languageEnButton.addEventListener("click", () => {
+  if (started) return;
+  playLanguageKey();
+  language = "en";
+  applyLanguage();
+});
+
 powerButton.addEventListener("click", () => {
   unlockAudio();
 
@@ -706,4 +947,13 @@ function pick(items) {
 }
 
 // Affiche immédiatement la valeur initiale, même avant le premier redémarrage.
+applyLanguage();
 renderIntegrity();
+
+if (new URLSearchParams(window.location.search).has("debug-win")) {
+  started = true;
+  document.getElementById("start-screen")?.style.setProperty("display", "none");
+  document.querySelector(".terminal-inner-ui")?.style.setProperty("display", "flex", "important");
+  resetGame();
+  window.setTimeout(triggerWin, 0);
+}

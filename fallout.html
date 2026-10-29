@@ -15,7 +15,12 @@
     <div class="crt-screen bg-terminal">
       <div id="start-screen">
         <div class="start-title">ROBCO INDUSTRIES</div>
-        <div class="start-sub">Appuyez sur POWER pour démarrer</div>
+        <div id="start-sub" class="start-sub">Choisissez votre langue</div>
+        <div class="language-options" role="group" aria-label="Language selection">
+          <button id="language-fr" class="language-btn selected" type="button">Français</button>
+          <button id="language-en" class="language-btn" type="button">English</button>
+        </div>
+        <div id="start-hint" class="start-hint">Appuyez sur POWER pour démarrer</div>
       </div>
       <div class="glare"></div>
       <div class="scanlines"></div>
@@ -48,5 +53,6 @@
   </div>
   <script type="module" src="engine.js"></script>
 </body>
+
 
 </html>
